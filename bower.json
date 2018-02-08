@@ -1,6 +1,6 @@
 {
   "name": "request-hooks-logic",
-  "description": "A node module and a web components to perform actions when the request and response are ready.",
+  "description": "Package containing a logic for creating HTTP request / response hooks",
   "version": "0.1.0",
   "license": "Apache-2.0 OR CC-BY-4.0",
   "authors": [
