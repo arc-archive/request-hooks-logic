@@ -7,4 +7,6 @@ node_js:
   - "8"
 script:
 - npm test
+after_script:
+- bower install --silent
 - polymer test --plugin sauce --job-name \"variables-manager:local-test\"
