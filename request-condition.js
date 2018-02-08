@@ -77,8 +77,11 @@ class _RequestLogicCondition {
   }
 
   isEqual(value, condition) {
-    if (value) {
+    if (typeof value !== 'undefined') {
       value = String(value);
+    }
+    if (typeof condition !== 'undefined') {
+      condition = String(condition);
     }
     if (!isNaN(condition)) {
       condition = Number(condition);
@@ -89,15 +92,7 @@ class _RequestLogicCondition {
   }
 
   isNotEqual(value, condition) {
-    if (value) {
-      value = String(value);
-    }
-    if (!isNaN(condition)) {
-      condition = Number(condition);
-      value = Number(value);
-      return value !== condition;
-    }
-    return condition !== value;
+    return !this.isEqual(value, condition);
   }
 
   isLessThan(value, condition) {
@@ -119,21 +114,11 @@ class _RequestLogicCondition {
   }
 
   isGratherThan(value, condition) {
-    condition = Number(condition);
-    value = Number(value);
-    if (condition !== condition || value !== value) {
-      return false;
-    }
-    return value > condition;
+    return !this.isLessThanEqual(value, condition);
   }
 
   isGratherThanEqual(value, condition) {
-    condition = Number(condition);
-    value = Number(value);
-    if (condition !== condition || value !== value) {
-      return false;
-    }
-    return value >= condition;
+    return !this.isLessThan(value, condition);
   }
 
   contains(value, condition) {
