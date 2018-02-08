@@ -1,5 +1,5 @@
 'use strict';
-/* global Request */
+/* global Request, Response */
 const assert = require('chai').assert;
 const {RequestLogicAction} = require('../request-action.js');
 global.self = global;
@@ -83,5 +83,107 @@ describe('run()', function() {
       done();
     });
     logic.run(request);
+  });
+});
+
+describe('run() with conditions', function() {
+  describe('Runs command', function() {
+    const action = {
+      source: 'request.url.hash.hparam',
+      action: 'assign-variable',
+      destination: 'myVar',
+      permament: false,
+      conditions: [{
+        source: 'response.status',
+        operator: 'equal',
+        condition: '200'
+      }]
+    };
+    const url = 'https://auth.domain.com/path/auth?query=value&a=b#hparam=hvalue&c=d';
+    let logic;
+    let request;
+    let response;
+    before(function() {
+      request = new Request(url, {
+        headers: {
+          'content-type': 'application/xml',
+          'x-www-token': 'test-token',
+          'content-encoding': 'gzip'
+        }
+      });
+      response = new Response('{}', {
+        status: 200,
+        headers: {
+          'content-type': 'application/json',
+          'content-length': 2
+        }
+      });
+    });
+    beforeEach(function() {
+      logic = new RequestLogicAction(action);
+    });
+
+    it('Runs command for single condition', function() {
+      return logic.run(request, response)
+      .then((result) => assert.isTrue(result));
+    });
+
+    it('Runs command for multiple conditions', function() {
+      action.conditions.push({
+        source: 'request.headers',
+        operator: 'contains',
+        condition: 'content-type'
+      });
+      return logic.run(request, response)
+      .then((result) => assert.isTrue(result));
+    });
+  });
+
+  describe('Do not run command', function() {
+    const action = {
+      source: 'request.url.hash.hparam',
+      action: 'assign-variable',
+      destination: 'myVar',
+      permament: false,
+      conditions: [{
+        source: 'response.status',
+        operator: 'equal',
+        condition: '200'
+      }, {
+        source: 'request.headers',
+        operator: 'contains',
+        condition: 'x-requested-with'
+      }]
+    };
+    const url = 'https://auth.domain.com/path/auth?query=value&a=b#hparam=hvalue&c=d';
+    let logic;
+    let request;
+    let response;
+    before(function() {
+      request = new Request(url, {
+        headers: {
+          'content-type': 'application/xml',
+          'x-www-token': 'test-token',
+          'content-encoding': 'gzip'
+        }
+      });
+      response = new Response('{}', {
+        status: 200,
+        headers: {
+          'content-type': 'application/json',
+          'content-length': 2
+        }
+      });
+    });
+
+    beforeEach(function() {
+      logic = new RequestLogicAction(action);
+    });
+
+    it('Do not run command for multiple conditions', function() {
+      action.conditions.push();
+      return logic.run(request, response)
+      .then((result) => assert.isFalse(result));
+    });
   });
 });

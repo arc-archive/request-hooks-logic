@@ -269,6 +269,27 @@ describe('Response::extract()', function() {
       assert.isUndefined(result);
     });
   });
+
+  describe('Status code', function() {
+    var logic;
+    const url = 'https://auth.domain.com';
+    beforeEach(function() {
+      const response = new Response('{}', {
+        url: url,
+        status: 200
+      });
+      logic = new DataExtractor({
+        response: response,
+        request: new Request('/')
+      });
+    });
+
+    it('Should return status code', function() {
+      logic._sourcePath = ['response', 'status'];
+      const result = logic.extract(logic._sourcePath);
+      assert.equal(result, 200);
+    });
+  });
 });
 
 describe('Request::extract()', function() {
@@ -504,6 +525,27 @@ describe('Request::extract()', function() {
 
     it('Should return undefined for unknown hash parameter', function() {
       logic._sourcePath = ['request', 'url', 'hash', 'e'];
+      const result = logic.extract(logic._sourcePath);
+      assert.isUndefined(result);
+    });
+  });
+
+  describe('Status code', function() {
+    var logic;
+    const url = 'https://auth.domain.com';
+    beforeEach(function() {
+      const response = new Response('{}', {
+        url: url,
+        status: 200
+      });
+      logic = new DataExtractor({
+        response: response,
+        request: new Request('/')
+      });
+    });
+
+    it('Should return undefined', function() {
+      logic._sourcePath = ['request', 'status'];
       const result = logic.extract(logic._sourcePath);
       assert.isUndefined(result);
     });
