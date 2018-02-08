@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "main": "index.js",
   "scripts": {
-    "test": "mocha test/*.test.js && polymer test --plugin sauce --job-name \"variables-manager:local-test\""
+    "test": "mocha test/*.test.js"
   },
   "engines": {
     "node": ">=7.0.0"
