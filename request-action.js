@@ -21,13 +21,73 @@ if (isNode) {
     return ev;
   };
 }
+/**
+ * A convinient class to run series of logic actions for request / response.
+ */
+class RequestLogicRunner extends EventEmitter {
+  /**
+   * @constructor
+   * @param {Array<Object>} actions List of action definitions.
+   */
+  constructor(actions) {
+    if (!actions || !actions.length) {
+      throw new Error('Actions not specified.');
+    }
+    this._actions = actions.map((config) => {
+      return new RequestLogicAction(config);
+    });
+  }
+  /**
+   * Runs all actions for the request / response objects.
+   *
+   * @param {Request} request Request object as defined in Fetch API
+   * @param {Response} response Response object as defined in Fetch API
+   * @return {Promise} Promise resolved when all actions finish.
+   */
+  run(request, response) {
+    return this._runRecursive(this._actions, request, response);
+  }
 
+  _runRecursive(actions, request, response) {
+    if (!actions || !actions.length) {
+      return Promise.resolve();
+    }
+    const action = actions.shift();
+    this._attachListeners(action);
+    return action.run()
+    .then(() => {
+      this._detatchListeners(action);
+      return this._runRecursive(actions, request, response);
+    });
+  }
+
+  _attachListeners(action) {
+    action.on('variable-store-action', this._actionHandler.bind(this, 'variable-store-action'));
+    action.on('variable-update-action', this._actionHandler.bind(this, 'variable-update-action'));
+  }
+
+  _detatchListeners(action) {
+    action.removeAllListeners('variable-store-action');
+    action.removeAllListeners('variable-update-action');
+  }
+
+  _actionHandler(type, detail) {
+    this.emit(type, detail);
+  }
+}
+/**
+ * Class responsible for running preconfigured action on the Request / Response
+ * object.
+ */
 class RequestLogicAction extends EventEmitter {
   /**
    * @constructor
    * @param {Object} action Action model:
-   * source {String} data source
-   * action {String} action to be performed
+   * source {String} Data source with path to the data.
+   * action {String} Action to be performed
+   * destination {Strning} Destination for the value read from source
+   * conditions {Array<Object>} List of conditions to use. See
+   * RequestLogicCondition class for description.
    */
   constructor(action) {
     super();
@@ -83,7 +143,7 @@ class RequestLogicAction extends EventEmitter {
    *
    * @param {Request} request Request object as defined in Fetch API
    * @param {Response} response Response object as defined in Fetch API
-   * @return {Promise} Promise resolved fo Boolean `true` if the action was
+   * @return {Promise} Promise resolved to Boolean `true` if the action was
    * performed or `false` if the action wasn't performed because haven't meet
    * defined conditions.
    */
@@ -271,4 +331,5 @@ class RequestLogicAction extends EventEmitter {
 
 if (isNode) {
   exports.RequestLogicAction = RequestLogicAction;
+  exports.RequestLogicRunner = RequestLogicRunner;
 }
