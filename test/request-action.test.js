@@ -9,8 +9,7 @@ describe('_performAction()', function() {
   const action = {
     source: 'request.url',
     action: 'assign-variable',
-    destination: 'myVar',
-    permament: true
+    destination: 'myVar'
   };
   const value = 'test-value';
   var logic;
@@ -41,22 +40,13 @@ describe('_performAction()', function() {
     });
     logic._performAction(value);
   });
-
-  it('Emits permament property', function(done) {
-    logic.once('variable-update-action', function(detail) {
-      assert.isTrue(detail.permament);
-      done();
-    });
-    logic._performAction(value);
-  });
 });
 
 describe('run()', function() {
   const action = {
     source: 'request.url.hash.hparam',
     action: 'assign-variable',
-    destination: 'myVar',
-    permament: true
+    destination: 'myVar'
   };
   const url = 'https://auth.domain.com/path/auth?query=value&a=b#hparam=hvalue&c=d';
   var logic;
@@ -84,6 +74,15 @@ describe('run()', function() {
     });
     logic.run(request);
   });
+
+  it('Fires variable-store-action event', function(done) {
+    logic.once('variable-store-action', function(detail) {
+      assert.typeOf(detail, 'object');
+      done();
+    });
+    logic._action = 'store-variable';
+    logic.run(request);
+  });
 });
 
 describe('run() with conditions', function() {
@@ -92,7 +91,6 @@ describe('run() with conditions', function() {
       source: 'request.url.hash.hparam',
       action: 'assign-variable',
       destination: 'myVar',
-      permament: false,
       conditions: [{
         source: 'response.status',
         operator: 'equal',
@@ -144,7 +142,6 @@ describe('run() with conditions', function() {
       source: 'request.url.hash.hparam',
       action: 'assign-variable',
       destination: 'myVar',
-      permament: false,
       conditions: [{
         source: 'response.status',
         operator: 'equal',

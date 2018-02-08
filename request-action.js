@@ -227,6 +227,7 @@ class RequestLogicAction extends EventEmitter {
   _performAction(value) {
     switch (this._action) {
       case 'assign-variable': return this._assignVariable(value);
+      case 'store-variable': return this._storeVariable(value);
       default: throw new Error('Unknown action: ' + this._action);
     }
   }
@@ -234,6 +235,8 @@ class RequestLogicAction extends EventEmitter {
    * Assigns value to a variable.
    * It sends an event (Custom Event in a browser or EventEmmiter in node)
    * so the application can handle change of the variable in a correct way.
+   * This event mean to update variable value in memory only. The implementation
+   * should not store the new value in the data store.
    *
    * @param {?String} value A value read from the source path.
    * @return {Promise} A promise resolved when the value is updated.
@@ -241,10 +244,27 @@ class RequestLogicAction extends EventEmitter {
   _assignVariable(value) {
     let detail = {
       variable: this._destination,
-      value: value,
-      permament: this._opts.permament
+      value: value
     };
     this.emit('variable-update-action', detail);
+    return Promise.resolve();
+  }
+  /**
+   * Assigns value to a variable.
+   * It sends an event (Custom Event in a browser or EventEmmiter in node)
+   * so the application can handle change of the variable in a correct way.
+   *
+   * This event mean to update variable value and store it in the data store.
+   *
+   * @param {?String} value A value read from the source path.
+   * @return {Promise} A promise resolved when the value is updated.
+   */
+  _storeVariable(value) {
+    let detail = {
+      variable: this._destination,
+      value: value
+    };
+    this.emit('variable-store-action', detail);
     return Promise.resolve();
   }
 }

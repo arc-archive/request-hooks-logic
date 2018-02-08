@@ -31,8 +31,7 @@ the License.
       const action = {
         source: 'request.url',
         action: 'assign-variable',
-        destination: 'myVar',
-        permament: true
+        destination: 'myVar'
       };
       const value = 'test-value';
       var logic;
@@ -66,23 +65,13 @@ the License.
         });
         logic._performAction(value);
       });
-
-      test('Emits permament property', function(done) {
-        window.addEventListener('variable-update-action', function clb(e) {
-          window.removeEventListener('variable-update-action', clb);
-          assert.isTrue(e.detail.permament);
-          done();
-        });
-        logic._performAction(value);
-      });
     });
 
     suite('run()', function() {
       const action = {
         source: 'request.url.hash.hparam',
         action: 'assign-variable',
-        destination: 'myVar',
-        permament: true
+        destination: 'myVar'
       };
       const url = 'https://auth.domain.com/path/auth?query=value&a=b#hparam=hvalue&c=d';
       var logic;
@@ -109,6 +98,16 @@ the License.
           assert.typeOf(e.detail, 'object');
           done();
         });
+        logic.run(request);
+      });
+
+      test('Fires variable-store-action event', function(done) {
+        window.addEventListener('variable-store-action', function clb(e) {
+          window.removeEventListener('variable-store-action', clb);
+          assert.typeOf(e.detail, 'object');
+          done();
+        });
+        logic._action = 'store-variable';
         logic.run(request);
       });
     });
