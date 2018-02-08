@@ -33,6 +33,7 @@ class _DataExtractor {
     switch (path[1]) {
       case 'url': return this._getDataUrl(source.url, path.slice(2));
       case 'headers': return this._getDataHeaders(source, path.slice(2));
+      case 'status': return this._getDataStatus(source);
       case 'body':
         const ct = source.headers.get('content-type');
         if (path[0] === 'request') {
@@ -293,6 +294,16 @@ class _DataExtractor {
       attrValue = true;
     }
     return attrValue;
+  }
+  /**
+   * Returns status code from the response object.
+   * If the source is the `Request` object then it returns `undefined`.
+   *
+   * @param {Request|Response} source Reuest or Response object.
+   * @return {Number|undefined} Status code or `undefined` if not set.
+   */
+  _getDataStatus(source) {
+    return source.status;
   }
 }
 
