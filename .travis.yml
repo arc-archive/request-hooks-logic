@@ -8,5 +8,5 @@ node_js:
 script:
 - npm test
 after_script:
-- bower install --silent
+- npm i bower && bower install --silent
 - polymer test --plugin sauce --job-name \"variables-manager:local-test\"
