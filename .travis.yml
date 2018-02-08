@@ -5,6 +5,9 @@ node_js:
   - "6"
   - "7"
   - "8"
+before_script:
+- bower install --silent
 script:
 - npm test
+after_script:
 - polymer test --plugin sauce --job-name \"variables-manager:local-test\"
