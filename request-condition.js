@@ -68,8 +68,8 @@ class _RequestLogicCondition {
     switch (operator) {
       case 'equal': return this.isEqual(value, condition);
       case 'not-equal': return this.isNotEqual(value, condition);
-      case 'grather-than': return this.isGratherThan(value, condition);
-      case 'grather-than-equal': return this.isGratherThanEqual(value, condition);
+      case 'greater-than': return this.isGreaterThan(value, condition);
+      case 'greater-than-equal': return this.isGreaterThanEqual(value, condition);
       case 'less-than': return this.isLessThan(value, condition);
       case 'less-than-equal': return this.isLessThanEqual(value, condition);
       case 'contains': return this.contains(value, condition);
@@ -113,19 +113,38 @@ class _RequestLogicCondition {
     return value <= condition;
   }
 
-  isGratherThan(value, condition) {
-    return !this.isLessThanEqual(value, condition);
+  isGreaterThan(value, condition) {
+    condition = Number(condition);
+    value = Number(value);
+    if (condition !== condition || value !== value) {
+      return false;
+    }
+    return value > condition;
   }
 
-  isGratherThanEqual(value, condition) {
-    return !this.isLessThan(value, condition);
+  isGreaterThanEqual(value, condition) {
+    condition = Number(condition);
+    value = Number(value);
+    if (condition !== condition || value !== value) {
+      return false;
+    }
+    return value >= condition;
   }
 
   contains(value, condition) {
     if (!value) {
       return false;
     }
-    if (typeof value === 'string' || value instanceof Array) {
+    if (typeof value === 'string') {
+      return value.indexOf(condition) !== -1;
+    }
+    if (value instanceof Array) {
+      if (!isNaN(condition) && typeof condition !== 'number') {
+        let result = value.indexOf(Number(condition));
+        if (result !== -1) {
+          return true;
+        }
+      }
       return value.indexOf(condition) !== -1;
     }
     if (typeof value !== 'object') {
