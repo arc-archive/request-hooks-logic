@@ -1,0 +1,40 @@
+{
+  "name": "request-hooks-logic",
+  "description": "Package containing a logic for creating HTTP request / response hooks",
+  "version": "0.1.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha test/*.test.js && polymer test --plugin sauce --job-name \"variables-manager:local-test\""
+  },
+  "engines": {
+    "node": ">=7.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/advanced-rest-client/request-hooks-logic.git"
+  },
+  "keywords": [
+    "api-console",
+    "builder",
+    "node"
+  ],
+  "author": "Pawel Psztyc, Advanced Rest Client Authors",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/advanced-rest-client/request-hooks-logic/issues"
+  },
+  "homepage": "https://github.com/advanced-rest-client/request-hooks-logic#readme",
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^3.2.0",
+    "whatwg-fetch": "github:advanced-rest-client/fetch",
+    "polymer-cli": "^1.2.0"
+  },
+  "files": [
+    "index.js"
+  ],
+  "dependencies": {
+    "url-search-params": "^0.10.0",
+    "xml-parse": "^0.3.1"
+  }
+}

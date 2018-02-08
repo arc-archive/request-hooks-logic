@@ -1,0 +1,37 @@
+{
+  "name": "request-hooks-logic",
+  "description": "A node module and a web components to perform actions when the request and response are ready.",
+  "version": "0.1.0",
+  "license": "Apache-2.0 OR CC-BY-4.0",
+  "authors": [
+    "The Advanced REST client authors <arc@mulesoft.com>"
+  ],
+  "keywords": [
+    "web-components",
+    "polymer",
+    "actions"
+  ],
+  "private": true,
+  "main": "request-hooks-logic.html",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:advanced-rest-client/request-hooks-logic.git"
+  },
+  "dependencies": {
+    "arc-polyfills": "advanced-rest-client/arc-polyfills#^0.1.8"
+  },
+  "devDependencies": {
+    "web-component-tester": "^6.0.0",
+    "iron-test-helpers": "PolymerElements/iron-test-helpers#^1.4.0",
+    "test-fixture": "PolymerElements/test-fixture#^3.0.0",
+    "webcomponentsjs": "webcomponents/webcomponentsjs#^0.7.0",
+    "arc-headers": "advanced-rest-client/arc-headers#^0.1.2"
+  },
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tasks"
+  ]
+}
