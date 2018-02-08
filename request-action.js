@@ -83,6 +83,9 @@ class RequestLogicAction extends EventEmitter {
    *
    * @param {Request} request Request object as defined in Fetch API
    * @param {Response} response Response object as defined in Fetch API
+   * @return {Promise} Promise resolved fo Boolean `true` if the action was
+   * performed or `false` if the action wasn't performed because haven't meet
+   * defined conditions.
    */
   run(request, response) {
     this._request = request;
@@ -91,13 +94,21 @@ class RequestLogicAction extends EventEmitter {
     .then(() => this._areConditionsMeet())
     .then((canExecute) => {
       if (!canExecute) {
-        return;
+        return false;
       }
-      const args = this._getRequestDetails();
-      const extractor = new DataExtractor(args);
-      const value = extractor.extract(this._sourcePath);
-      return this._performAction(value);
+      return this._execute();
     });
+  }
+  /**
+   * Executes the action after the condisions are meet.
+   * @return {Promise} Promise resolved fo Boolean `true`
+   */
+  _execute() {
+    const args = this._getRequestDetails();
+    const extractor = new DataExtractor(args);
+    const value = extractor.extract(this._sourcePath);
+    return this._performAction(value)
+    .then(() => true);
   }
   /**
    * If needed it reads request and response body string value and sets class
@@ -234,6 +245,7 @@ class RequestLogicAction extends EventEmitter {
       permament: this._opts.permament
     };
     this.emit('variable-update-action', detail);
+    return Promise.resolve();
   }
 }
 
