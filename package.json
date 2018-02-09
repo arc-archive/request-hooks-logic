@@ -1,7 +1,7 @@
 {
   "name": "@advanced-rest-client/request-hooks-logic",
   "description": "Package containing a logic for creating HTTP request / response hooks",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "main": "index.js",
   "scripts": {
     "test": "mocha test/*.test.js"
