@@ -55,7 +55,7 @@ class RequestLogicRunner extends EventEmitter {
     }
     const action = actions.shift();
     this._attachListeners(action);
-    return action.run()
+    return action.run(request, response)
     .then(() => {
       this._detatchListeners(action);
       return this._runRecursive(actions, request, response);
