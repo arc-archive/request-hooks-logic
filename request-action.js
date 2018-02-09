@@ -63,13 +63,19 @@ class RequestLogicRunner extends EventEmitter {
   }
 
   _attachListeners(action) {
-    action.on('variable-store-action', this._actionHandler.bind(this, 'variable-store-action'));
-    action.on('variable-update-action', this._actionHandler.bind(this, 'variable-update-action'));
+    if (isNode) {
+      let l1 = this._actionHandler.bind(this, 'variable-store-action');
+      let l2 = this._actionHandler.bind(this, 'variable-update-action');
+      action.on('variable-store-action', l1);
+      action.on('variable-update-action', l2);
+    }
   }
 
   _detatchListeners(action) {
-    action.removeAllListeners('variable-store-action');
-    action.removeAllListeners('variable-update-action');
+    if (isNode) {
+      action.removeAllListeners('variable-store-action');
+      action.removeAllListeners('variable-update-action');
+    }
   }
 
   _actionHandler(type, detail) {
