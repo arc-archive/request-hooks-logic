@@ -33,6 +33,7 @@ class RequestLogicRunner extends EventEmitter {
     if (!actions || !actions.length) {
       throw new Error('Actions not specified.');
     }
+    super();
     this._actions = actions.map((config) => {
       return new RequestLogicAction(config);
     });
