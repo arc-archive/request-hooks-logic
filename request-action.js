@@ -98,6 +98,10 @@ class RequestLogicAction extends EventEmitter {
    */
   constructor(action) {
     super();
+    this.enabled = typeof action.enabled === 'undefined' ? true : action.enabled;
+    if (!this.enabled) {
+      return;
+    }
     RequestLogicAction.validate(action);
     if (action.conditions) {
       this.conditions = this._prepareConditions(action.conditions);
@@ -155,6 +159,9 @@ class RequestLogicAction extends EventEmitter {
    * defined conditions.
    */
   run(request, response) {
+    if (!this.enabled) {
+      return Promise.resolve(false);
+    }
     this._request = request;
     this._response = response;
     return this._prepareBodyValues(request, response)
