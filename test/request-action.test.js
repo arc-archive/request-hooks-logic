@@ -85,6 +85,42 @@ describe('run()', function() {
   });
 });
 
+describe('Enabled state', function() {
+  const action = {
+    source: 'request.url.hash.hparam',
+    action: 'assign-variable',
+    destination: 'myVar',
+    enabled: false
+  };
+  const url = 'https://auth.domain.com/path/auth?query=value&a=b#hparam=hvalue&c=d';
+  var logic;
+  var request;
+  beforeEach(function() {
+    logic = new RequestLogicAction(action);
+    request = new Request(url, {
+      headers: {
+        'content-type': 'application/xml',
+        'x-www-token': 'test-token',
+        'content-encoding': 'gzip'
+      }
+    });
+  });
+
+  it('Sets enables property to false', function() {
+    assert.isFalse(logic.enabled);
+  });
+
+  it('Do not execute action', function() {
+    let called = false;
+    logic._prepareBodyValues = function() {
+      called = true;
+    };
+    return logic.run(request, undefined)
+    .then((result) => assert.isFalse(result))
+    .then(() => assert.isFalse(called));
+  });
+});
+
 describe('run() with conditions', function() {
   describe('Runs command', function() {
     const action = {

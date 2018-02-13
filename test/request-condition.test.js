@@ -706,6 +706,21 @@ describe('satisfied()', function() {
     };
   });
 
+  describe('Enabled state', function() {
+    const args = {
+      source: 'response.body.data.2.value',
+      operator: 'equal',
+      condition: 'array'
+    };
+    beforeEach(function() {
+      c = new RequestLogicCondition(args);
+    });
+
+    it('Sets enabled property to true`', function() {
+      assert.isTrue(c.enabled);
+    });
+  });
+
   describe('equal op', function() {
     const args = {
       source: 'response.body.data.2.value',
@@ -904,5 +919,63 @@ describe('satisfied()', function() {
         assert.isFalse(result);
       });
     });
+  });
+});
+
+describe('Disabled condition', function() {
+  const jsonStr = `{
+    "nextPageToken": "test-token",
+    "data": [{
+      "name": "test1",
+      "numeric": 1
+    }, {
+      "name": "test2",
+      "arr": ["a", 1]
+    }, {
+      "name": "test3",
+      "value": "array",
+      "deep": {
+        "booleanValue": true,
+        "nullValue": null,
+        "numberValue": 2,
+        "arrayValue": ["test1", "test2"]
+      }
+    }]
+  }`;
+  let options;
+  let c;
+  before(function() {
+    const response = new Response(jsonStr, {
+      headers: {
+        'content-type': 'application/json'
+      }
+    });
+    options = {
+      response: response,
+      request: new Request('/'),
+      responseBody: jsonStr,
+      requestBody: ''
+    };
+  });
+  const args = {
+    source: 'response.body',
+    operator: 'contains',
+    condition: 'nextPageToken',
+    enabled: false
+  };
+  beforeEach(function() {
+    c = new RequestLogicCondition(args);
+  });
+
+  it('Sets enabled property to false', function() {
+    assert.isFalse(c.enabled);
+  });
+
+  it('satisfied() always returns true', function() {
+    const result = c.satisfied(options);
+    assert.isTrue(result);
+    c._condition = 'nextPageTokenNot';
+    const result2 = c.satisfied(options);
+    assert.isTrue(result2);
   });
 });

@@ -8,9 +8,35 @@ if (typeof window !== 'undefined' || (typeof self !== 'undefined' && self.import
 if (isNode) {
   var {DataExtractor} = require('./data-extractor.js');
 }
-
+/**
+ * Conditions check for request and response objects.
+ *
+ * Condition data model:
+ * ```javascript
+ * {
+ *  source: 'String', // the same as for action
+ *  operator: 'String', // see below for list of all operators
+ *  condition: 'any' // value to use to compare the value get from the action `source` property
+ * }
+ * ```
+ * Operator can be one of:
+ * - equal
+ * - not-equal
+ * - greater-than
+ * - greater-than-equal
+ * - less-than
+ * - less-than-equal
+ * - contains
+ *
+ * Contains can operate on strings, simple arrays (e.g. `['test', 123]`) or
+ * objects (e.g. {'key':'value'}).
+ */
 class _RequestLogicCondition {
   constructor(condition) {
+    this.enabled = typeof condition.enabled === 'undefined' ? true : condition.enabled;
+    if (!this.enabled) {
+      return;
+    }
     _RequestLogicCondition.validate(condition);
     this._source = condition.source;
     this._operator = condition.operator;
@@ -52,6 +78,9 @@ class _RequestLogicCondition {
    * @return {Boolean} True if the condition is satisfied and false otherwise.
    */
   satisfied(requestData) {
+    if (!this.enabled) {
+      return true;
+    }
     const extractor = new DataExtractor(requestData);
     const value = extractor.extract(this._source);
     return this.checkCondition(value, this._operator, this._condition);

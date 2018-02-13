@@ -188,7 +188,9 @@ class _DataExtractor {
         return;
       }
     }
-    if (contentType.indexOf('/xml') !== -1 || contentType.indexOf('+xml') !== -1) {
+    if (contentType.indexOf('/xml') !== -1 ||
+        contentType.indexOf('+xml') !== -1 ||
+        contentType.indexOf('text/html' === 0)) {
       return this._getPayloadXmlValue(data, path);
     }
   }

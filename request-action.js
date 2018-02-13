@@ -33,6 +33,7 @@ class RequestLogicRunner extends EventEmitter {
     if (!actions || !actions.length) {
       throw new Error('Actions not specified.');
     }
+    super();
     this._actions = actions.map((config) => {
       return new RequestLogicAction(config);
     });
@@ -54,7 +55,7 @@ class RequestLogicRunner extends EventEmitter {
     }
     const action = actions.shift();
     this._attachListeners(action);
-    return action.run()
+    return action.run(request, response)
     .then(() => {
       this._detatchListeners(action);
       return this._runRecursive(actions, request, response);
@@ -62,13 +63,19 @@ class RequestLogicRunner extends EventEmitter {
   }
 
   _attachListeners(action) {
-    action.on('variable-store-action', this._actionHandler.bind(this, 'variable-store-action'));
-    action.on('variable-update-action', this._actionHandler.bind(this, 'variable-update-action'));
+    if (isNode) {
+      let l1 = this._actionHandler.bind(this, 'variable-store-action');
+      let l2 = this._actionHandler.bind(this, 'variable-update-action');
+      action.on('variable-store-action', l1);
+      action.on('variable-update-action', l2);
+    }
   }
 
   _detatchListeners(action) {
-    action.removeAllListeners('variable-store-action');
-    action.removeAllListeners('variable-update-action');
+    if (isNode) {
+      action.removeAllListeners('variable-store-action');
+      action.removeAllListeners('variable-update-action');
+    }
   }
 
   _actionHandler(type, detail) {
@@ -91,6 +98,10 @@ class RequestLogicAction extends EventEmitter {
    */
   constructor(action) {
     super();
+    this.enabled = typeof action.enabled === 'undefined' ? true : action.enabled;
+    if (!this.enabled) {
+      return;
+    }
     RequestLogicAction.validate(action);
     if (action.conditions) {
       this.conditions = this._prepareConditions(action.conditions);
@@ -148,6 +159,9 @@ class RequestLogicAction extends EventEmitter {
    * defined conditions.
    */
   run(request, response) {
+    if (!this.enabled) {
+      return Promise.resolve(false);
+    }
     this._request = request;
     this._response = response;
     return this._prepareBodyValues(request, response)
