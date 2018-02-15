@@ -110,6 +110,8 @@ class RequestLogicAction extends EventEmitter {
     this._sourcePath = action.source.split('.');
     this._action = action.action;
     this._destination = action.destination;
+    this._iterator = action.iterator;
+    this._hasIterator = action.hasIterator;
     this._opts = action;
   }
   /**
@@ -180,7 +182,8 @@ class RequestLogicAction extends EventEmitter {
   _execute() {
     const args = this._getRequestDetails();
     const extractor = new DataExtractor(args);
-    const value = extractor.extract(this._sourcePath);
+    const iterator = this._hasIterator ? this._iterator : undefined;
+    const value = extractor.extract(this._sourcePath, iterator);
     return this._performAction(value)
     .then(() => true);
   }

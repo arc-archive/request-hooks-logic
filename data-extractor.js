@@ -4,8 +4,14 @@ var isNode = true;
 if (typeof window !== 'undefined' || (typeof self !== 'undefined' && self.importScripts)) {
   isNode = false;
 }
-
+/**
+ * Extracts the data from either request or response.
+ */
 class _DataExtractor {
+  /**
+   * @constructor
+   * @param {Object} options Request, response and bodies.
+   */
   constructor(options) {
     this._request = options.request;
     this._requestBody = options.requestBody;
@@ -18,16 +24,18 @@ class _DataExtractor {
    *
    * @param {Array<String>|String} path Data path. Either array of path segments
    * or full path as string.
+   * @param {Object} iterator Iterator model. Used only with response body.
    * @return {String|Number|undefined} Data to be processed
    */
-  extract(path) {
+  extract(path, iterator) {
     if (typeof path === 'string') {
       path = path.split(this._pathDelimiter);
     }
-    var source;
+    let source;
     if (path[0] === 'request') {
       source = this._request;
     } else {
+      iterator = undefined;
       source = this._response;
     }
     switch (path[1]) {
@@ -41,7 +49,7 @@ class _DataExtractor {
         } else {
           source = this._responseBody;
         }
-        return this._getPayloadValue(source, ct, path.slice(2));
+        return this._getPayloadValue(source, ct, path.slice(2), iterator);
       default: throw new Error('Unknown path for source ' + path[0]);
     }
   }
@@ -109,7 +117,7 @@ class _DataExtractor {
     if (!param) {
       return value;
     }
-    var obj;
+    let obj;
     if (isNode) {
       const URLSearchParams = require('url-search-params');
       obj = new URLSearchParams(value);
@@ -158,7 +166,7 @@ class _DataExtractor {
    * @return {Headers|String} Value for the path.
    */
   _getDataHeaders(source, path) {
-    var headers = source.headers;
+    let headers = source.headers;
     if (!path || !path.length) {
       return;
     }
@@ -166,15 +174,16 @@ class _DataExtractor {
   }
 
   /**
-   * Gets a value from a text for current path. Path is part of the configuration
-   * object passed to the constructor.
+   * Gets a value from a text for current path. Path is part of the
+   * configuration object passed to the constructor.
    *
    * @param {String} data Payload value.
    * @param {String} contentType Body content type.
    * @param {Array<String>} path Remaining path to follow
+   * @param {Object} iterator Iterator model
    * @return {String|undefined} Value for given path.
    */
-  _getPayloadValue(data, contentType, path) {
+  _getPayloadValue(data, contentType, path, iterator) {
     if (!path || !path.length || !data) {
       return data;
     }
@@ -206,7 +215,7 @@ class _DataExtractor {
     if (!part || !json || typeof json !== 'object') {
       return json;
     }
-    var isNumber = false;
+    let isNumber = false;
     if (!isNaN(part)) {
       part = Number(part);
       isNumber = true;
@@ -280,7 +289,8 @@ class _DataExtractor {
    *
    * @param {Element} dom DOM element object
    * @param {Number} part Current part of the path.
-   * @return {String|undefined} Returned value for path or undefined if not found.
+   * @return {String|undefined} Returned value for path or undefined
+   * if not found.
    */
   _valueForAttr(dom, part) {
     let match = part.match(/attr\((.+)\)/);
