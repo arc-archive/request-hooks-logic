@@ -1,3 +1,9 @@
+<a name="0.1.9"></a>
+## [0.1.9](https://github.com/advanced-rest-client/request-hooks-logic/compare/0.1.8...0.1.9) (2018-02-16)
+
+
+
+
 <a name="0.1.8"></a>
 ## [0.1.8](https://github.com/advanced-rest-client/request-hooks-logic/compare/0.1.7...0.1.8) (2018-02-16)
 
