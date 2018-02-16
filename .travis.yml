@@ -10,3 +10,5 @@ script:
 after_script:
 - npm i bower && bower install --silent
 - polymer test --plugin sauce --job-name \"variables-manager:local-test\"
+after_success:
+- node tasks/ci.js
