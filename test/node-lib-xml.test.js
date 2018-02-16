@@ -1,6 +1,6 @@
 'use strict';
 const assert = require('chai').assert;
-const {NodeXml} = require('../node-lib/xml.js');
+const {NodeXml} = require('../lib/node/xml.js');
 
 const xml = `<?xml version="1.0"?>
 <people xmlns:xul = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" >

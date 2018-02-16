@@ -1,7 +1,7 @@
 'use strict';
 /* global Response, Request */
 const assert = require('chai').assert;
-const {DataExtractor} = require('../data-extractor.js');
+const {DataExtractor} = require('..');
 global.self = global;
 require('whatwg-fetch');
 

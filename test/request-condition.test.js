@@ -1,7 +1,7 @@
 'use strict';
 /* global Response, Request */
 const assert = require('chai').assert;
-const {RequestLogicCondition} = require('../request-condition.js');
+const {RequestLogicCondition} = require('..');
 global.self = global;
 require('whatwg-fetch');
 
