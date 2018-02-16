@@ -1,3 +1,14 @@
+<a name="0.1.6"></a>
+## [0.1.6](https://github.com/advanced-rest-client/request-hooks-logic/compare/0.1.5...0.1.6) (2018-02-16)
+
+
+### Fix
+
+* Adding condition to test if content type header exists. ([dcbfe935ddb4e028e7354896bc2f411fe00ccdb5](https://github.com/advanced-rest-client/request-hooks-logic/commit/dcbfe935ddb4e028e7354896bc2f411fe00ccdb5))
+* Fixed place where the iterator was cleared ([c94e37ed5249eadb33912758318ed555d588361f](https://github.com/advanced-rest-client/request-hooks-logic/commit/c94e37ed5249eadb33912758318ed555d588361f))
+
+
+
 <a name="0.1.5"></a>
 ## [0.1.5](https://github.com/advanced-rest-client/request-hooks-logic/compare/0.1.4...0.1.5) (2018-02-16)
 
