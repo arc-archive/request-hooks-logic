@@ -1,7 +1,7 @@
 <!doctype html>
 <!--
 @license
-Copyright 2016 The Advanced REST client authors <arc@mulesoft.com>
+Copyright 2018 The Advanced REST client authors <arc@mulesoft.com>
 Licensed under the Apache License, Version 2.0 (the "License"); you may not
 use this file except in compliance with the License. You may obtain a copy of
 the License at
@@ -16,16 +16,41 @@ the License.
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
-
-    <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+    <script src="../../webcomponentsjs/webcomponents-loader.js"></script>
     <script src="../../web-component-tester/browser.js"></script>
-    <script src="../../iron-test-helpers/test-helpers.js"></script>
-    <link rel="import" href="../request-hooks-logic.html">
-    <link rel="import" href="../../arc-polyfills/arc-polyfills.html">
+    <link rel="import" href="../request-logic-action.html">
   </head>
   <body>
+    <test-fixture id="Basic">
+      <template>
+        <request-logic-action></request-logic-action>
+      </template>
+    </test-fixture>
     <script>
-    /* global assert, Request, RequestLogicAction */
+    suite('Basics', () => {
+      let element;
+      setup(() => {
+        element = fixture('Basic');
+      });
+
+      test('Computes _sourcePath', () => {
+        const path = 'a.b.c';
+        const compare = ['a', 'b', 'c'];
+        element.source = path;
+        assert.deepEqual(element._sourcePath, compare);
+      });
+
+      test('Computes _conditions', () => {
+        element.conditions = [{
+          source: 'response.status',
+          operator: 'equal',
+          condition: 200,
+          enabled: true
+        }];
+        assert.typeOf(element._conditions, 'array');
+        assert.lengthOf(element._conditions, 1);
+      });
+    });
     suite('_performAction()', function() {
       const action = {
         source: 'request.url',
@@ -33,14 +58,17 @@ the License.
         destination: 'myVar'
       };
       const value = 'test-value';
-      var logic;
+      let logic;
       setup(function() {
-        logic = new RequestLogicAction(action);
+        logic = fixture('Basic');
+        logic.source = action.source;
+        logic.action = action.action;
+        logic.destination = action.destination;
       });
 
       test('Emits variable-update-action event', function(done) {
-        window.addEventListener('variable-update-action', function clb(e) {
-          window.removeEventListener('variable-update-action', clb);
+        logic.addEventListener('variable-update-action', function clb(e) {
+          logic.removeEventListener('variable-update-action', clb);
           assert.typeOf(e.detail, 'object');
           done();
         });
@@ -48,57 +76,21 @@ the License.
       });
 
       test('Emits variable property', function(done) {
-        window.addEventListener('variable-update-action', function clb(e) {
-          window.removeEventListener('variable-update-action', clb);
+        logic.addEventListener('variable-update-action', function clb(e) {
+          logic.removeEventListener('variable-update-action', clb);
           assert.equal(e.detail.variable, action.destination);
           done();
         });
         logic._performAction(value);
       });
 
-      test('Emits value property', function(done) {
+      test('Emits value property (on window)', function(done) {
         window.addEventListener('variable-update-action', function clb(e) {
           window.removeEventListener('variable-update-action', clb);
           assert.equal(e.detail.value, value);
           done();
         });
         logic._performAction(value);
-      });
-    });
-
-    suite('Enabled state', function() {
-      const action = {
-        source: 'request.url.hash.hparam',
-        action: 'assign-variable',
-        destination: 'myVar',
-        enabled: false
-      };
-      const url = 'https://auth.domain.com/path/auth?query=value&a=b#hparam=hvalue&c=d';
-      var logic;
-      var request;
-      setup(function() {
-        logic = new RequestLogicAction(action);
-        request = new Request(url, {
-          headers: {
-            'content-type': 'application/xml',
-            'x-www-token': 'test-token',
-            'content-encoding': 'gzip'
-          }
-        });
-      });
-
-      test('Sets enables property to false', function() {
-        assert.isFalse(logic.enabled);
-      });
-
-      test('Do not execute action', function() {
-        let called = false;
-        logic._prepareBodyValues = function() {
-          called = true;
-        };
-        return logic.run(request, undefined)
-        .then((result) => assert.isFalse(result))
-        .then(() => assert.isFalse(called));
       });
     });
 
@@ -109,17 +101,18 @@ the License.
         destination: 'myVar'
       };
       const url = 'https://auth.domain.com/path/auth?query=value&a=b#hparam=hvalue&c=d';
-      var logic;
-      var request;
+      let logic;
+      let request;
       setup(function() {
-        logic = new RequestLogicAction(action);
-        request = new Request(url, {
-          headers: {
-            'content-type': 'application/xml',
-            'x-www-token': 'test-token',
-            'content-encoding': 'gzip'
-          }
-        });
+        logic = fixture('Basic');
+        logic.source = action.source;
+        logic.action = action.action;
+        logic.destination = action.destination;
+        request = {
+          url,
+          headers: 'content-type: application/xml\nx-www-token: ' +
+            'test-token\ncontent-encoding: gzip'
+        };
       });
 
       test('Run return the promise', function() {
@@ -128,21 +121,21 @@ the License.
       });
 
       test('Fires variable-update-action event', function(done) {
-        window.addEventListener('variable-update-action', function clb(e) {
-          window.removeEventListener('variable-update-action', clb);
+        logic.addEventListener('variable-update-action', function clb(e) {
+          logic.removeEventListener('variable-update-action', clb);
           assert.typeOf(e.detail, 'object');
           done();
         });
         logic.run(request);
       });
 
-      test('Fires variable-store-action event', function(done) {
+      test('Fires variable-store-action event (on window)', function(done) {
         window.addEventListener('variable-store-action', function clb(e) {
           window.removeEventListener('variable-store-action', clb);
           assert.typeOf(e.detail, 'object');
           done();
         });
-        logic._action = 'store-variable';
+        logic.action = 'store-variable';
         logic.run(request);
       });
     });

@@ -1,7 +1,7 @@
 <!doctype html>
 <!--
 @license
-Copyright 2016 The Advanced REST client authors <arc@mulesoft.com>
+Copyright 2018 The Advanced REST client authors <arc@mulesoft.com>
 Licensed under the Apache License, Version 2.0 (the "License"); you may not
 use this file except in compliance with the License. You may obtain a copy of
 the License at
@@ -16,17 +16,18 @@ the License.
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
-
-    <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+    <script src="../../webcomponentsjs/webcomponents-loader.js"></script>
     <script src="../../web-component-tester/browser.js"></script>
-    <script src="../../iron-test-helpers/test-helpers.js"></script>
-    <link rel="import" href="../request-hooks-logic.html">
-    <link rel="import" href="../../arc-polyfills/arc-polyfills.html">
-    <link rel="import" href="../../arc-headers/arc-headers.html">
+    <link rel="import" href="../request-data-extractor.html">
   </head>
   <body>
+    <test-fixture id="Basic">
+      <template>
+        <request-data-extractor></request-data-extractor>
+      </template>
+    </test-fixture>
+
     <script>
-    /* global assert, Response, Request, DataExtractor */
     const xmlStr = `<?xml version="1.0"?>
     <people xmlns:xul="some.xul" boolean-attribute="true">
       <person db-id="test1">
@@ -60,233 +61,253 @@ the License.
     describe('Response::extract()', function() {
       describe('Body', function() {
         describe('XML', function() {
-          var logic;
-          beforeEach(function() {
-            const response = new Response(xmlStr, {
-              headers: {
-                'content-type': 'application/xml'
-              }
-            });
-            logic = new DataExtractor({
-              response: response,
-              request: new Request('/'),
-              responseBody: xmlStr
-            });
+          let logic;
+          beforeEach(() => {
+            logic = fixture('Basic');
+            logic.request = {
+              url: '/',
+              headers: '',
+              method: 'GET'
+            };
+            logic.response = {
+              status: 200,
+              payload: xmlStr,
+              headers: 'content-type: application/xml'
+            };
           });
 
-          it('Parses simple path', function() {
-            logic._sourcePath = ['response', 'body', 'people', 'person'];
-            const result = logic.extract(logic._sourcePath);
+          it('Parses string path', function() {
+            logic.path = 'response.body.people.person';
+            const result = logic.extract();
+            assert.isTrue(result.indexOf('<name') !== -1);
+          });
+
+          it('Parses array path', function() {
+            logic.path = ['response', 'body', 'people', 'person'];
+            const result = logic.extract();
             assert.isTrue(result.indexOf('<name') !== -1);
           });
 
           it('Parses complex path', function() {
-            logic._sourcePath = ['response', 'body', 'people', 'person', '1', 'phoneNumber'];
-            const result = logic.extract(logic._sourcePath);
+            logic.path = ['response', 'body', 'people', 'person', '1', 'phoneNumber'];
+            const result = logic.extract();
             assert.equal(result, '020 7925 0918');
           });
 
           it('Gets attribute value', function() {
-            logic._sourcePath = ['response', 'body', 'people', 'person', '0', 'attr(db-id)'];
-            const result = logic.extract(logic._sourcePath);
+            logic.path = ['response', 'body', 'people', 'person', '0', 'attr(db-id)'];
+            const result = logic.extract();
             assert.equal(result, 'test1');
           });
 
           it('Gets attribute value 2', function() {
-            logic._sourcePath = ['response', 'body', 'people', 'person', '1', 'name', 'attr(first)'];
-            const result = logic.extract(logic._sourcePath);
+            logic.path = ['response', 'body', 'people', 'person', '1', 'name', 'attr(first)'];
+            const result = logic.extract();
             assert.equal(result, 'tony');
           });
 
           it('Gets attribute value 3', function() {
-            logic._sourcePath = ['response', 'body', 'people', 'attr(xmlns:xul)'];
-            const result = logic.extract(logic._sourcePath);
+            logic.path = ['response', 'body', 'people', 'attr(xmlns:xul)'];
+            const result = logic.extract();
             assert.equal(result, 'some.xul');
           });
 
           it('Gets boolean attribute value', function() {
-            logic._sourcePath = ['response', 'body', 'people', 'attr(boolean-attribute)'];
-            const result = logic.extract(logic._sourcePath);
+            logic.path = ['response', 'body', 'people', 'attr(boolean-attribute)'];
+            const result = logic.extract();
             assert.equal(result, 'true');
           });
         });
 
         describe('JSON', function() {
-          var logic;
-          beforeEach(function() {
-            const response = new Response(jsonStr, {
-              headers: {
-                'content-type': 'application/json'
-              }
-            });
-            logic = new DataExtractor({
-              response: response,
-              request: new Request('/'),
-              responseBody: jsonStr
-            });
+          let logic;
+          beforeEach(() => {
+            logic = fixture('Basic');
+            logic.request = {
+              url: '/',
+              headers: '',
+              method: 'GET'
+            };
+            logic.response = {
+              status: 200,
+              payload: jsonStr,
+              headers: 'content-type: application/json'
+            };
           });
 
-          it('Parses simple path', function() {
-            logic._sourcePath = ['response', 'body', 'nextPageToken'];
-            const result = logic.extract(logic._sourcePath);
+          it('Parses string path', function() {
+            logic.path = 'response.body.nextPageToken';
+            const result = logic.extract();
+            assert.equal(result, 'test-token');
+          });
+
+          it('Parses array path', function() {
+            logic.path = ['response', 'body', 'nextPageToken'];
+            const result = logic.extract();
             assert.equal(result, 'test-token');
           });
 
           it('Parses complex path', function() {
-            logic._sourcePath = ['response', 'body', 'data', '1', 'name'];
-            const result = logic.extract(logic._sourcePath);
+            logic.path = ['response', 'body', 'data', '1', 'name'];
+            const result = logic.extract();
             assert.equal(result, 'test2');
           });
 
           it('Returns boolean value', function() {
-            logic._sourcePath = ['response', 'body', 'data', '2', 'deep', 'booleanValue'];
-            const result = logic.extract(logic._sourcePath);
+            logic.path = ['response', 'body', 'data', '2', 'deep', 'booleanValue'];
+            const result = logic.extract();
             assert.isTrue(result);
           });
 
           it('Returns null value', function() {
-            logic._sourcePath = ['response', 'body', 'data', '2', 'deep', 'nullValue'];
-            const result = logic.extract(logic._sourcePath);
+            logic.path = ['response', 'body', 'data', '2', 'deep', 'nullValue'];
+            const result = logic.extract();
             assert.isTrue(result === null);
           });
 
           it('Returns numeric value', function() {
-            logic._sourcePath = ['response', 'body', 'data', '2', 'deep', 'numberValue'];
-            const result = logic.extract(logic._sourcePath);
+            logic.path = ['response', 'body', 'data', '2', 'deep', 'numberValue'];
+            const result = logic.extract();
             assert.equal(result, 2);
           });
 
           it('Returns array value', function() {
-            logic._sourcePath = ['response', 'body', 'data', '2', 'deep', 'arrayValue', '1'];
-            const result = logic.extract(logic._sourcePath);
+            logic.path = ['response', 'body', 'data', '2', 'deep', 'arrayValue', '1'];
+            const result = logic.extract();
             assert.equal(result, 'test2');
           });
         });
       });
 
       describe('Headers', function() {
-        var logic;
-        beforeEach(function() {
-          const response = new Response('{}', {
-            headers: {
-              'content-type': 'application/xml',
-              'x-www-token': 'test-token',
-              'content-encoding': 'gzip'
-            }
-          });
-          logic = new DataExtractor({
-            response: response,
-            request: new Request('/')
-          });
+        let logic;
+        beforeEach(() => {
+          logic = fixture('Basic');
+          logic.request = {
+            url: '/',
+            headers: '',
+            method: 'GET'
+          };
+          logic.response = {
+            status: 200,
+            payload: '{}',
+            headers: 'content-type: application/json\nx-www-token: ' +
+              'test-token\ncontent-encoding: gzip'
+          };
         });
 
         it('Should get a value for default header', function() {
-          logic._sourcePath = ['response', 'headers', 'content-type'];
-          const result = logic.extract(logic._sourcePath);
-          assert.equal(result, 'application/xml');
+          logic.path = ['response', 'headers', 'content-type'];
+          const result = logic.extract();
+          assert.equal(result, 'application/json');
         });
 
         it('Should get a value for custom header', function() {
-          logic._sourcePath = ['response', 'headers', 'x-www-token'];
-          const result = logic.extract(logic._sourcePath);
+          logic.path = ['response', 'headers', 'x-www-token'];
+          const result = logic.extract();
           assert.equal(result, 'test-token');
         });
 
         it('Should return undefined for whole headers object', function() {
-          logic._sourcePath = ['response', 'headers'];
-          const result = logic.extract(logic._sourcePath);
+          logic.path = ['response', 'headers'];
+          const result = logic.extract();
           assert.equal(result, undefined);
         });
 
         it('Should return undefined for not existing header', function() {
-          logic._sourcePath = ['response', 'headers', 'not-there'];
-          const result = logic.extract(logic._sourcePath);
+          logic.path = ['response', 'headers', 'not-there'];
+          const result = logic.extract();
           assert.equal(result, undefined);
         });
       });
 
       describe('URL', function() {
-        var logic;
+        let logic;
         const url = 'https://auth.domain.com/path/auth?query=value&a=b#hparam=hvalue&c=d';
-        beforeEach(function() {
-          const response = new Response('{}', {
-            url: url
-          });
-          logic = new DataExtractor({
-            response: response,
-            request: new Request('/')
-          });
+        beforeEach(() => {
+          logic = fixture('Basic');
+          logic.request = {
+            url: url,
+            headers: '',
+            method: 'GET'
+          };
+          logic.response = {
+            url: url,
+            status: 200,
+            payload: '{}',
+            headers: ''
+          };
         });
 
         it('Should get whole URL', function() {
-          logic._sourcePath = ['response', 'url'];
-          const result = logic.extract(logic._sourcePath);
+          logic.path = ['response', 'url'];
+          const result = logic.extract();
           assert.equal(result, url);
         });
 
         it('Should read the host value', function() {
-          logic._sourcePath = ['response', 'url', 'host'];
-          const result = logic.extract(logic._sourcePath);
+          logic.path = ['response', 'url', 'host'];
+          const result = logic.extract();
           assert.equal(result, 'auth.domain.com');
         });
 
         it('Should read the protocol value', function() {
-          logic._sourcePath = ['response', 'url', 'protocol'];
-          const result = logic.extract(logic._sourcePath);
+          logic.path = ['response', 'url', 'protocol'];
+          const result = logic.extract();
           assert.equal(result, 'https:');
         });
 
         it('Should read the path value', function() {
-          logic._sourcePath = ['response', 'url', 'path'];
-          const result = logic.extract(logic._sourcePath);
+          logic.path = ['response', 'url', 'path'];
+          const result = logic.extract();
           assert.equal(result, '/path/auth');
         });
 
         it('Should read the whole query value', function() {
-          logic._sourcePath = ['response', 'url', 'query'];
-          const result = logic.extract(logic._sourcePath);
+          logic.path = ['response', 'url', 'query'];
+          const result = logic.extract();
           assert.equal(result, 'query=value&a=b');
         });
 
         it('Should read the query parameter value', function() {
-          logic._sourcePath = ['response', 'url', 'query', 'query'];
-          const result = logic.extract(logic._sourcePath);
+          logic.path = ['response', 'url', 'query', 'query'];
+          const result = logic.extract();
           assert.equal(result, 'value');
         });
 
         it('Should read the query parameter 2', function() {
-          logic._sourcePath = ['response', 'url', 'query', 'a'];
-          const result = logic.extract(logic._sourcePath);
+          logic.path = ['response', 'url', 'query', 'a'];
+          const result = logic.extract();
           assert.equal(result, 'b');
         });
 
         it('Should return undefined for unknown query parameter', function() {
-          logic._sourcePath = ['response', 'url', 'query', 'c'];
-          const result = logic.extract(logic._sourcePath);
+          logic.path = ['response', 'url', 'query', 'c'];
+          const result = logic.extract();
           assert.isUndefined(result);
         });
 
         it('Should read the whole hash value', function() {
-          logic._sourcePath = ['response', 'url', 'hash'];
-          const result = logic.extract(logic._sourcePath);
+          logic.path = ['response', 'url', 'hash'];
+          const result = logic.extract();
           assert.equal(result, 'hparam=hvalue&c=d');
         });
 
         it('Should read the hash parameter value', function() {
-          logic._sourcePath = ['response', 'url', 'hash', 'hparam'];
-          const result = logic.extract(logic._sourcePath);
+          logic.path = ['response', 'url', 'hash', 'hparam'];
+          const result = logic.extract();
           assert.equal(result, 'hvalue');
         });
 
         it('Should read the hash parameter 2', function() {
-          logic._sourcePath = ['response', 'url', 'hash', 'c'];
-          const result = logic.extract(logic._sourcePath);
+          logic.path = ['response', 'url', 'hash', 'c'];
+          const result = logic.extract();
           assert.equal(result, 'd');
         });
 
         it('Should return undefined for unknown hash parameter', function() {
-          logic._sourcePath = ['response', 'url', 'hash', 'e'];
-          const result = logic.extract(logic._sourcePath);
+          logic.path = ['response', 'url', 'hash', 'e'];
+          const result = logic.extract();
           assert.isUndefined(result);
         });
       });
@@ -295,237 +316,246 @@ the License.
     describe('Request::extract()', function() {
       describe('Body', function() {
         describe('XML', function() {
-          var logic;
-          beforeEach(function() {
-            const request = new Request('http://domain.com', {
-              headers: {
-                'content-type': 'application/xml'
-              },
-              body: xmlStr,
-              method: 'POST'
-            });
-            logic = new DataExtractor({
-              response: new Response('<atom></atom>'),
-              request: request,
-              requestBody: xmlStr
-            });
+          let logic;
+          beforeEach(() => {
+            logic = fixture('Basic');
+            logic.request = {
+              url: 'http://domain.com',
+              headers: 'content-type: application/xml',
+              method: 'POST',
+              payload: xmlStr
+            };
+            logic.response = {
+              url: '/',
+              status: 200,
+              payload: '<atom></atom>',
+              headers: 'content-type: application/xml'
+            };
           });
 
           it('Parses simple path', function() {
-            logic._sourcePath = ['request', 'body', 'people', 'person'];
-            const result = logic.extract(logic._sourcePath);
+            logic.path = ['request', 'body', 'people', 'person'];
+            const result = logic.extract();
             assert.isTrue(result.indexOf('<name') !== -1);
           });
 
           it('Parses complex path', function() {
-            logic._sourcePath = ['request', 'body', 'people', 'person', '1', 'phoneNumber'];
-            const result = logic.extract(logic._sourcePath);
+            logic.path = ['request', 'body', 'people', 'person', '1', 'phoneNumber'];
+            const result = logic.extract();
             assert.equal(result, '020 7925 0918');
           });
 
           it('Gets attribute value', function() {
-            logic._sourcePath = ['request', 'body', 'people', 'person', '0', 'attr(db-id)'];
-            const result = logic.extract(logic._sourcePath);
+            logic.path = ['request', 'body', 'people', 'person', '0', 'attr(db-id)'];
+            const result = logic.extract();
             assert.equal(result, 'test1');
           });
 
           it('Gets attribute value 2', function() {
-            logic._sourcePath = ['request', 'body', 'people', 'person', '1', 'name', 'attr(first)'];
-            const result = logic.extract(logic._sourcePath);
+            logic.path = ['request', 'body', 'people', 'person', '1', 'name', 'attr(first)'];
+            const result = logic.extract();
             assert.equal(result, 'tony');
           });
 
           it('Gets attribute value 3', function() {
-            logic._sourcePath = ['request', 'body', 'people', 'attr(xmlns:xul)'];
-            const result = logic.extract(logic._sourcePath);
+            logic.path = ['request', 'body', 'people', 'attr(xmlns:xul)'];
+            const result = logic.extract();
             assert.equal(result, 'some.xul');
           });
 
           it('Gets boolean attribute value', function() {
-            logic._sourcePath = ['request', 'body', 'people', 'attr(boolean-attribute)'];
-            const result = logic.extract(logic._sourcePath);
+            logic.path = ['request', 'body', 'people', 'attr(boolean-attribute)'];
+            const result = logic.extract();
             assert.equal(result, 'true');
           });
         });
 
         describe('JSON', function() {
-          var logic;
-          beforeEach(function() {
-            const request = new Request('http://domain.com', {
-              headers: {
-                'content-type': 'application/json'
-              },
-              body: jsonStr,
-              method: 'POST'
-            });
-            logic = new DataExtractor({
-              response: new Response('<atom></atom>'),
-              request: request,
-              requestBody: jsonStr
-            });
+          let logic;
+          beforeEach(() => {
+            logic = fixture('Basic');
+            logic.request = {
+              url: 'http://domain.com',
+              headers: 'content-type: application/json',
+              method: 'POST',
+              payload: jsonStr
+            };
+            logic.response = {
+              url: '/',
+              status: 200,
+              payload: '{}',
+              headers: 'content-type: application/json'
+            };
           });
 
           it('Parses simple path', function() {
-            logic._sourcePath = ['request', 'body', 'nextPageToken'];
-            const result = logic.extract(logic._sourcePath);
+            logic.path = ['request', 'body', 'nextPageToken'];
+            const result = logic.extract();
             assert.equal(result, 'test-token');
           });
 
           it('Parses complex path', function() {
-            logic._sourcePath = ['request', 'body', 'data', '1', 'name'];
-            const result = logic.extract(logic._sourcePath);
+            logic.path = ['request', 'body', 'data', '1', 'name'];
+            const result = logic.extract();
             assert.equal(result, 'test2');
           });
 
           it('Returns boolean value', function() {
-            logic._sourcePath = ['request', 'body', 'data', '2', 'deep', 'booleanValue'];
-            const result = logic.extract(logic._sourcePath);
+            logic.path = ['request', 'body', 'data', '2', 'deep', 'booleanValue'];
+            const result = logic.extract();
             assert.isTrue(result);
           });
 
           it('Returns null value', function() {
-            logic._sourcePath = ['request', 'body', 'data', '2', 'deep', 'nullValue'];
-            const result = logic.extract(logic._sourcePath);
+            logic.path = ['request', 'body', 'data', '2', 'deep', 'nullValue'];
+            const result = logic.extract();
             assert.isTrue(result === null);
           });
 
           it('Returns numeric value', function() {
-            logic._sourcePath = ['request', 'body', 'data', '2', 'deep', 'numberValue'];
-            const result = logic.extract(logic._sourcePath);
+            logic.path = ['request', 'body', 'data', '2', 'deep', 'numberValue'];
+            const result = logic.extract();
             assert.equal(result, 2);
           });
 
           it('Returns array value', function() {
-            logic._sourcePath = ['request', 'body', 'data', '2', 'deep', 'arrayValue', '1'];
-            const result = logic.extract(logic._sourcePath);
+            logic.path = ['request', 'body', 'data', '2', 'deep', 'arrayValue', '1'];
+            const result = logic.extract();
             assert.equal(result, 'test2');
           });
         });
       });
 
       describe('Headers', function() {
-        var logic;
-        beforeEach(function() {
-          const request = new Request('http://domain.com', {
-            headers: {
-              'content-type': 'application/xml',
-              'x-www-token': 'test-token',
-              'content-encoding': 'gzip'
-            }
-          });
-          logic = new DataExtractor({
-            response: new Response('<atom></atom>'),
-            request: request,
-            requestBody: xmlStr
-          });
+        let logic;
+        beforeEach(() => {
+          logic = fixture('Basic');
+          logic.request = {
+            url: 'http://domain.com',
+            headers: 'content-type: application/xml\nx-www-token: ' +
+              'test-token\ncontent-encoding: gzip',
+            method: 'GET'
+          };
+          logic.response = {
+            url: '/',
+            status: 200,
+            payload: '<atom></atom>',
+            headers: 'content-type: application/xml'
+          };
         });
 
         it('Should get a value for default header', function() {
-          logic._sourcePath = ['request', 'headers', 'content-type'];
-          const result = logic.extract(logic._sourcePath);
+          logic.path = ['request', 'headers', 'content-type'];
+          const result = logic.extract();
           assert.equal(result, 'application/xml');
         });
 
         it('Should get a value for custom header', function() {
-          logic._sourcePath = ['request', 'headers', 'x-www-token'];
-          const result = logic.extract(logic._sourcePath);
+          logic.path = ['request', 'headers', 'x-www-token'];
+          const result = logic.extract();
           assert.equal(result, 'test-token');
         });
 
         it('Should return undefined for whole headers object', function() {
-          logic._sourcePath = ['request', 'headers'];
-          const result = logic.extract(logic._sourcePath);
+          logic.path = ['request', 'headers'];
+          const result = logic.extract();
           assert.equal(result, undefined);
         });
 
         it('Should return undefined for not existing header', function() {
-          logic._sourcePath = ['request', 'headers', 'not-there'];
-          const result = logic.extract(logic._sourcePath);
+          logic.path = ['request', 'headers', 'not-there'];
+          const result = logic.extract();
           assert.equal(result, undefined);
         });
       });
 
       describe('URL', function() {
-        var logic;
+        let logic;
         const url = 'https://auth.domain.com/path/auth?query=value&a=b#hparam=hvalue&c=d';
-        beforeEach(function() {
-          const request = new Request(url);
-          logic = new DataExtractor({
-            response: new Response('<atom></atom>'),
-            request: request,
-            requestBody: jsonStr
-          });
+        beforeEach(() => {
+          logic = fixture('Basic');
+          logic.request = {
+            url: url,
+            headers: '',
+            method: 'GET'
+          };
+          logic.response = {
+            url: url,
+            status: 200,
+            payload: '<atom></atom>',
+            headers: 'content-type: application/xml'
+          };
         });
 
         it('Should get whole URL', function() {
-          logic._sourcePath = ['request', 'url'];
-          const result = logic.extract(logic._sourcePath);
+          logic.path = ['request', 'url'];
+          const result = logic.extract();
           assert.equal(result, url);
         });
 
         it('Should read the host value', function() {
-          logic._sourcePath = ['request', 'url', 'host'];
-          const result = logic.extract(logic._sourcePath);
+          logic.path = ['request', 'url', 'host'];
+          const result = logic.extract();
           assert.equal(result, 'auth.domain.com');
         });
 
         it('Should read the protocol value', function() {
-          logic._sourcePath = ['request', 'url', 'protocol'];
-          const result = logic.extract(logic._sourcePath);
+          logic.path = ['request', 'url', 'protocol'];
+          const result = logic.extract();
           assert.equal(result, 'https:');
         });
 
         it('Should read the path value', function() {
-          logic._sourcePath = ['request', 'url', 'path'];
-          const result = logic.extract(logic._sourcePath);
+          logic.path = ['request', 'url', 'path'];
+          const result = logic.extract();
           assert.equal(result, '/path/auth');
         });
 
         it('Should read the whole query value', function() {
-          logic._sourcePath = ['request', 'url', 'query'];
-          const result = logic.extract(logic._sourcePath);
+          logic.path = ['request', 'url', 'query'];
+          const result = logic.extract();
           assert.equal(result, 'query=value&a=b');
         });
 
         it('Should read the query parameter value', function() {
-          logic._sourcePath = ['request', 'url', 'query', 'query'];
-          const result = logic.extract(logic._sourcePath);
+          logic.path = ['request', 'url', 'query', 'query'];
+          const result = logic.extract();
           assert.equal(result, 'value');
         });
 
         it('Should read the query parameter 2', function() {
-          logic._sourcePath = ['request', 'url', 'query', 'a'];
-          const result = logic.extract(logic._sourcePath);
+          logic.path = ['request', 'url', 'query', 'a'];
+          const result = logic.extract();
           assert.equal(result, 'b');
         });
 
         it('Should return undefined for unknown query parameter', function() {
-          logic._sourcePath = ['request', 'url', 'query', 'c'];
-          const result = logic.extract(logic._sourcePath);
+          logic.path = ['request', 'url', 'query', 'c'];
+          const result = logic.extract();
           assert.isUndefined(result);
         });
 
         it('Should read the whole hash value', function() {
-          logic._sourcePath = ['request', 'url', 'hash'];
-          const result = logic.extract(logic._sourcePath);
+          logic.path = ['request', 'url', 'hash'];
+          const result = logic.extract();
           assert.equal(result, 'hparam=hvalue&c=d');
         });
 
         it('Should read the hash parameter value', function() {
-          logic._sourcePath = ['request', 'url', 'hash', 'hparam'];
-          const result = logic.extract(logic._sourcePath);
+          logic.path = ['request', 'url', 'hash', 'hparam'];
+          const result = logic.extract();
           assert.equal(result, 'hvalue');
         });
 
         it('Should read the hash parameter 2', function() {
-          logic._sourcePath = ['request', 'url', 'hash', 'c'];
-          const result = logic.extract(logic._sourcePath);
+          logic.path = ['request', 'url', 'hash', 'c'];
+          const result = logic.extract();
           assert.equal(result, 'd');
         });
 
         it('Should return undefined for unknown hash parameter', function() {
-          logic._sourcePath = ['request', 'url', 'hash', 'e'];
-          const result = logic.extract(logic._sourcePath);
+          logic.path = ['request', 'url', 'hash', 'e'];
+          const result = logic.extract();
           assert.isUndefined(result);
         });
       });
@@ -533,13 +563,20 @@ the License.
 
     describe('_getDataUrl()', function() {
       const url = 'https://auth.domain.com/path/auth?query=value&a=b#hparam=hvalue&c=d';
-      var logic;
-      beforeEach(function() {
-        const request = new Request(url);
-        logic = new DataExtractor({
-          response: new Response('<atom></atom>'),
-          request: request
-        });
+      let logic;
+      beforeEach(() => {
+        logic = fixture('Basic');
+        logic.request = {
+          url: url,
+          headers: '',
+          method: 'GET'
+        };
+        logic.response = {
+          url: url,
+          status: 200,
+          payload: '<atom></atom>',
+          headers: 'content-type: application/xml'
+        };
       });
 
       it('Should return the url value', function() {
