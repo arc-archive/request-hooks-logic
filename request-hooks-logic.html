@@ -28,7 +28,12 @@ the License.
  * @customElement
  * @memberof LogicElements
  */
-class RequestHooksLogic extends HTMLElement {
+class RequestHooksLogic extends Polymer.Element {
+
+  static get template() {
+    const template = document.createElement('template');
+    return template;
+  }
 
   get evalElement() {
     if (!this.$) {
@@ -50,12 +55,12 @@ class RequestHooksLogic extends HTMLElement {
   }
 
   connectedCallback() {
-    // super.connectedCallback();
+    super.connectedCallback();
     window.addEventListener('run-response-actions', this._handler);
   }
 
   disconnectedCallback() {
-    // super.disconnectedCallback();
+    super.disconnectedCallback();
     window.removeEventListener('run-response-actions', this._handler);
   }
   /**
