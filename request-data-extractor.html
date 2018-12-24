@@ -529,9 +529,7 @@ class RequestDataExtractor extends ArcBehaviors.HeadersParserBehavior(Polymer.El
     if (!path || !path.length || !data) {
       return data;
     }
-    if (typeof data !== 'string') {
-      return;
-    }
+    data = String(data);
     if (contentType.indexOf('application/json') !== -1) {
       const extractor = new JsonExtractor(data, path, iterator);
       return extractor.extract();
