@@ -1,7 +1,7 @@
 {
   "name": "@advanced-rest-client/request-hooks-logic",
   "description": "Package containing a logic for creating HTTP request / response hooks",
-  "version": "2.0.0-preview",
+  "version": "2.0.0",
   "scripts": {
     "test": "polymer test --plugin local",
     "lint": "polymer lint request-hooks-logic.html",
