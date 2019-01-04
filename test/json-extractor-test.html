@@ -22,92 +22,269 @@ the License.
   </head>
   <body>
     <script>
-    /* global JsonExtractor */
-    suite('Extracts paths', function() {
-      const json = `
-      {
-        "items": [{
-          "id": "id1",
-          "name": {
-            "first": "Test"
-          }
-        }, {
-          "id": "id2",
-          "name": {
-            "first": "Brown"
-          }
-        }],
-        "nextPageToken": "testToken",
-        "deep": {
-          "object": {
-            "value": "true"
-          }
-        }
-      }
-      `;
-      let extractor;
-      test('Reads first level value', function() {
-        extractor = new JsonExtractor(json, 'nextPageToken');
-        const result = extractor.extract();
-        assert.equal(result, 'testToken');
+    /* global ActionIterableObject */
+    suite('ActionIterableObject', () => {
+      suite('constructor()', () => {
+        let opts;
+        setup(() => {
+          opts = {
+            operator: 'equal',
+            condition: 'test',
+            source: 'properties.*.first',
+          };
+        });
+
+        test('Sets "source" as an array', () => {
+          const instance = new ActionIterableObject(opts);
+          assert.typeOf(instance.source, 'array');
+          assert.lengthOf(instance.source, 3);
+        });
+
+        test('Sets operator', () => {
+          const instance = new ActionIterableObject(opts);
+          assert.equal(instance.operator, opts.operator);
+        });
+
+        test('Sets condition', () => {
+          const instance = new ActionIterableObject(opts);
+          assert.equal(instance.condition, opts.condition);
+        });
+
+        test('Won\'t set properties if not valid', () => {
+          opts.operator = 'unknown';
+          const instance = new ActionIterableObject(opts);
+          assert.isUndefined(instance.source);
+          assert.isUndefined(instance.operator);
+          assert.isUndefined(instance.condition);
+        });
       });
 
-      test('Reads deep object value', function() {
-        extractor = new JsonExtractor(json, 'deep.object.value');
-        const result = extractor.extract();
-        assert.equal(result, 'true');
-      });
+      suite('_validate()', () => {
+        let opts;
+        let instance;
+        setup(() => {
+          opts = {
+            operator: 'equal',
+            condition: 'test',
+            source: 'properties.*.first'
+          };
+          instance = new ActionIterableObject(opts);
+        });
 
-      test('Reads array value', function() {
-        extractor = new JsonExtractor(json, 'items.1.id');
-        const result = extractor.extract();
-        assert.equal(result, 'id2');
-      });
+        test('Returns true for valid options', () => {
+          const result = instance._validate(opts);
+          assert.isTrue(result);
+        });
 
-      test('Reads array deep value', function() {
-        extractor = new JsonExtractor(json, 'items.1.name.first');
-        const result = extractor.extract();
-        assert.equal(result, 'Brown');
-      });
+        test('Returns false when no source', () => {
+          delete opts.source;
+          const result = instance._validate(opts);
+          assert.isFalse(result);
+        });
 
-      test('Returns undefined for unknown path', function() {
-        extractor = new JsonExtractor(json, 'items.2.name.first');
-        const result = extractor.extract();
-        assert.isUndefined(result);
-      });
+        test('Returns false when no operator', () => {
+          delete opts.operator;
+          const result = instance._validate(opts);
+          assert.isFalse(result);
+        });
 
-      test('Returns undefined for unknown json', function() {
-        extractor = new JsonExtractor(undefined, 'items.2.name.first');
-        const result = extractor.extract();
-        assert.isUndefined(result, 'Brown');
+        test('Returns false when no condition', () => {
+          delete opts.condition;
+          const result = instance._validate(opts);
+          assert.isFalse(result);
+        });
+
+        test('Returns false when operator is not known', () => {
+          opts.operator = 'test';
+          const result = instance._validate(opts);
+          assert.isFalse(result);
+        });
+
+        [
+          'equal', 'not-equal', 'greater-than', 'greater-than-equal',
+          'less-than', 'less-than-equal', 'contains', 'regex'
+        ].forEach((op) => {
+          test('Returns true when operator is ' + op, () => {
+            opts.operator = op;
+            const result = instance._validate(opts);
+            assert.isTrue(result);
+          });
+        });
       });
     });
 
-    suite('Array JSON', function() {
-      const json = [{
-        id: 'id1',
-        name: {
-          first: 'Test',
-          last: 'Name'
-        }
-      }, {
-        id: 'id2',
-        name: {
-          first: 'Brown',
-          last: 'test2'
-        }
-      }];
-      var extractor;
-      test('Reads array value without iterator', function() {
-        extractor = new JsonExtractor(json, '0.id');
-        const result = extractor.extract();
-        assert.equal(result, 'id1');
+    /* global JsonExtractor */
+    suite('JsonExtractor', () => {
+      const json = '{"test": true}';
+      const path = 'a.b.b';
+      const iterator = {
+        operator: 'equal',
+        condition: 'test',
+        source: 'properties.*.first'
+      };
+      suite('Constructor', () => {
+        test('Sets _data property', () => {
+          const instance = new JsonExtractor(json, path, iterator);
+          assert.typeOf(instance._data, 'object');
+        });
+
+        test('Sets _path property when set', () => {
+          const instance = new JsonExtractor(json, path, iterator);
+          assert.typeOf(instance._path, 'array');
+          assert.lengthOf(instance._path, 3);
+        });
+
+        test('_path is undefined when missing', () => {
+          const instance = new JsonExtractor(json, undefined, iterator);
+          assert.isUndefined(instance._path);
+        });
+
+        test('Sets _iterator property', () => {
+          const instance = new JsonExtractor(json, path, iterator);
+          assert.isTrue(instance._iterator instanceof ActionIterableObject);
+        });
       });
 
-      test('Reads deep array value without iterator', function() {
-        extractor = new JsonExtractor(json, '0.name.first');
-        const result = extractor.extract();
-        assert.equal(result, 'Test');
+      suite('_processJson()', () => {
+        test('Returns undefined when no argument', () => {
+          const instance = new JsonExtractor(json, path, iterator);
+          const result = instance._processJson();
+          assert.isUndefined(result);
+        });
+
+        test('Returns undefined when argument is a number', () => {
+          const instance = new JsonExtractor(json, path, iterator);
+          const result = instance._processJson(5);
+          assert.isUndefined(result);
+        });
+
+        test('Returns undefined when argument is a boolean', () => {
+          const instance = new JsonExtractor(json, path, iterator);
+          const result = instance._processJson(true);
+          assert.isUndefined(result);
+        });
+
+        test('Returns undefined when argument cannot be parsed', () => {
+          const instance = new JsonExtractor(json, path, iterator);
+          const result = instance._processJson('{"test');
+          assert.isUndefined(result);
+        });
+
+        test('Returns passed argument if not string', () => {
+          const instance = new JsonExtractor(json, path, iterator);
+          const result = instance._processJson({test: 'value'});
+          assert.deepEqual(result, {test: 'value'});
+        });
+
+        test('Returns object', () => {
+          const instance = new JsonExtractor(json, path, iterator);
+          const result = instance._processJson(json);
+          assert.deepEqual(result, {
+            test: true
+          });
+        });
+
+        test('Returns array', () => {
+          const instance = new JsonExtractor(json, path, iterator);
+          const result = instance._processJson('["a"]');
+          assert.deepEqual(result, ['a']);
+        });
+      });
+
+      suite('extract()', () => {
+        suite('Object json', function() {
+          const json = `
+          {
+            "items": [{
+              "id": "id1",
+              "name": {
+                "first": "Test"
+              }
+            }, {
+              "id": "id2",
+              "name": {
+                "first": "Brown"
+              }
+            }],
+            "nextPageToken": "testToken",
+            "deep": {
+              "object": {
+                "value": "true"
+              }
+            }
+          }
+          `;
+          let extractor;
+          test('Reads first level value', function() {
+            extractor = new JsonExtractor(json, 'nextPageToken');
+            const result = extractor.extract();
+            assert.equal(result, 'testToken');
+          });
+
+          test('Reads deep object value', function() {
+            extractor = new JsonExtractor(json, 'deep.object.value');
+            const result = extractor.extract();
+            assert.equal(result, 'true');
+          });
+
+          test('Reads array value', function() {
+            extractor = new JsonExtractor(json, 'items.1.id');
+            const result = extractor.extract();
+            assert.equal(result, 'id2');
+          });
+
+          test('Reads array deep value', function() {
+            extractor = new JsonExtractor(json, 'items.1.name.first');
+            const result = extractor.extract();
+            assert.equal(result, 'Brown');
+          });
+
+          test('Returns undefined for unknown path', function() {
+            extractor = new JsonExtractor(json, 'items.2.name.first');
+            const result = extractor.extract();
+            assert.isUndefined(result);
+          });
+
+          test('Returns undefined for unknown json', function() {
+            extractor = new JsonExtractor(undefined, 'items.2.name.first');
+            const result = extractor.extract();
+            assert.isUndefined(result, 'Brown');
+          });
+        });
+
+        suite('Array JSON', function() {
+          const json = [{
+            id: 'id1',
+            name: {
+              first: 'Test',
+              last: 'Name'
+            }
+          }, {
+            id: 'id2',
+            name: {
+              first: 'Brown',
+              last: 'test2'
+            }
+          }];
+          let extractor;
+          test('Reads array value without iterator', function() {
+            extractor = new JsonExtractor(json, '0.id');
+            const result = extractor.extract();
+            assert.equal(result, 'id1');
+          });
+
+          test('Reads deep array value without iterator', function() {
+            extractor = new JsonExtractor(json, '0.name.first');
+            const result = extractor.extract();
+            assert.equal(result, 'Test');
+          });
+
+          test('Returns undefined when path not found', function() {
+            extractor = new JsonExtractor(json, '0.name.something');
+            const result = extractor.extract();
+            assert.isUndefined(result);
+          });
+        });
       });
     });
 
@@ -135,7 +312,7 @@ the License.
           operator: 'equal',
           condition: 'Brown'
         };
-        var extractor;
+        let extractor;
         test('Reads iterable value', function() {
           extractor = new JsonExtractor(json, 'id', iterator);
           const result = extractor.extract();
@@ -168,7 +345,7 @@ the License.
           operator: 'equal',
           condition: 'Brown'
         };
-        var extractor;
+        let extractor;
         test('Reads simple path value', function() {
           extractor = new JsonExtractor(json, 'id', iterator);
           const result = extractor.extract();
@@ -205,7 +382,7 @@ the License.
           operator: 'equal',
           condition: 'Test'
         };
-        var extractor;
+        let extractor;
         test('Reads simple path value', function() {
           extractor = new JsonExtractor(json, 'id', iterator);
           const result = extractor.extract();

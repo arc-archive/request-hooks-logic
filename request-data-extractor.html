@@ -26,7 +26,7 @@ class ActionIterableObject {
    */
   constructor(opts) {
     opts = opts || {};
-    this._validate(opts);
+    this.valid =this._validate(opts);
     if (!this.valid) {
       return;
     }
@@ -50,6 +50,7 @@ class ActionIterableObject {
    * Validates passed options and sets `valid` flag.
    *
    * @param {Object} opts Iterator options
+   * @return {Boolean} True when options are valid
    */
   _validate(opts) {
     let valid = true;
@@ -71,7 +72,7 @@ class ActionIterableObject {
         valid = false;
       }
     }
-    this.valid = valid;
+    return valid;
   }
 }
 /**
@@ -143,6 +144,7 @@ class JsonExtractor {
    *
    * @param {Object|Array} json JSON value to read
    * @param {Array<String>} path Path to search for the value.
+   * @param {Object} iterableOptions
    * @return {String|undefined} Value for given path.
    */
   _getValue(json, path, iterableOptions) {

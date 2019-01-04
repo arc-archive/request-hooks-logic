@@ -21,7 +21,7 @@
   "dependencies": {
     "polymer": "Polymer/polymer#^2.0.0",
     "headers-parser-behavior": "advanced-rest-client/headers-parser-behavior#^2.0.0",
-    "variables-evaluator": "advanced-rest-client/variables-evaluator#2.0.0-preview"
+    "variables-evaluator": "advanced-rest-client/variables-evaluator#^2.0.0"
   },
   "devDependencies": {
     "web-component-tester": "Polymer/web-component-tester#^6.0.0",
@@ -30,7 +30,7 @@
     "iron-demo-helpers": "PolymerElements/iron-demo-helpers#^2.0.0",
     "iron-component-page": "PolymerElements/iron-component-page#^3.0.1",
     "arc-polyfills": "advanced-rest-client/arc-polyfills#^0.1.8",
-    "variables-manager": "advanced-rest-client/variables-manager#2.0.0-preview",
+    "variables-manager": "advanced-rest-client/variables-manager#^2.0.0",
     "app-pouchdb": "PolymerElements/app-pouchdb#^2.1.1"
   },
   "ignore": [

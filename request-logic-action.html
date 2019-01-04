@@ -92,7 +92,8 @@ class RequestLogicAction extends Polymer.Element {
    * It throws an error if condition is not validated.
    *
    * @param {Array<Object>} conditions List of condition model.
-   * @return {Array<RequestLogicCondition>} Condition class instances.
+   * @return {Array<RequestLogicCondition>|undefined} Liost of condition class
+   * instances or undefined when no argument.
    */
   _prepareConditions(conditions) {
     if (!conditions) {
