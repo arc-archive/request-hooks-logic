@@ -24,7 +24,7 @@
   },
   "homepage": "https://github.com/advanced-rest-client/request-hooks-logic#readme",
   "devDependencies": {
-    "@polymer/gen-typescript-declarations": "^1.1.1"
+    "@polymer/gen-typescript-declarations": "^1.6.0"
   },
   "authors": [
     "Pawel Psztyc",
