@@ -21,18 +21,13 @@ the License.
  * Actions are logical operations that the user can define in the request panel
  * which the result is assigned to a variable.
  *
- * Note, this component does not use Polymer library. Use standard DOM methods
- * when using this element.
- *
  * @polymer
  * @customElement
  * @memberof LogicElements
  */
 class RequestHooksLogic extends Polymer.Element {
-
-  static get template() {
-    const template = document.createElement('template');
-    return template;
+  static get is() {
+    return 'request-hooks-logic';
   }
 
   get evalElement() {
@@ -77,12 +72,19 @@ class RequestHooksLogic extends Polymer.Element {
     e.detail.result = this.processActions(e.detail.actions,
       e.detail.request, e.detail.response);
   }
-
+  /**
+   * Processes actions when response object is ready.
+   * @param {Array<Object>} actions List of actions to perform
+   * @param {Object} request ArcRequest object. See this doc for data model:
+   * https://github.com/advanced-rest-client/api-components-api/blob/master/docs/api-request-and-response.md#api-request
+   * @param {Object} response ArcResponse object. See this doc for data model:
+   * https://github.com/advanced-rest-client/api-components-api/blob/master/docs/api-request-and-response.md#api-request
+   * @return {Promise} A promise resolved when actions were performed.
+   */
   processActions(actions, request, response) {
     if (!actions || !request || !response) {
-      return Promise.reject('Expecting 3 arguments.');
+      return Promise.reject(new Error('Expecting 3 arguments.'));
     }
-
     const p = [];
     actions.forEach((action) => {
       if (action.enabled === false) {
@@ -95,27 +97,18 @@ class RequestHooksLogic extends Polymer.Element {
   }
 
   _evaluateAction(action) {
-    action = this._copyAction(action);
+    const copy = this._copyAction(action);
     const mainProps = ['destination', 'source'];
     const iteratorProps = ['condition', 'source'];
-    return this.evalElement.evaluateVariables(action, mainProps)
+    return this.evalElement.evaluateVariables(copy, mainProps)
     .then(() => {
-      if (action.iterator) {
-        return this.evalElement.evaluateVariables(action.iterator, iteratorProps);
+      if (copy.iterator) {
+        return this.evalElement.evaluateVariables(copy.iterator, iteratorProps);
       }
     })
-    .then(() => {
-      const inst = document.createElement('request-logic-action');
-      inst.source = action.source;
-      inst.action = action.action;
-      inst.destination = action.destination;
-      inst.conditions = action.conditions;
-      inst.iterator = action.iterator;
-      inst.iteratorEnabled = action.hasIterator;
-      this.shadowRoot.appendChild(inst);
-      return inst;
-    });
+    .then(() => copy);
   }
+
   /**
    * Creates a copy of the actio object.
    *
@@ -134,12 +127,35 @@ class RequestHooksLogic extends Polymer.Element {
     }
     return result;
   }
-
+  /**
+   * Creates instance of `request-logic-action` element, sets its properties and
+   * inserts it into shadow DOM.
+   * @param {Object} action Action definition
+   * @return {Element}
+   */
+  _createLogicElement(action) {
+    const inst = document.createElement('request-logic-action');
+    inst.source = action.source;
+    inst.action = action.action;
+    inst.destination = action.destination;
+    inst.conditions = action.conditions;
+    inst.iterator = action.iterator;
+    inst.iteratorEnabled = action.hasIterator;
+    this.shadowRoot.appendChild(inst);
+    return inst;
+  }
+  /**
+   * Runs acrions recuresively until all actions are executed.
+   * @param {Array<Object>} actions Action definition
+   * @param {Object} request ARC request object
+   * @param {Object} response ARC response object
+   * @return {Promise}
+   */
   _runRecursive(actions, request, response) {
     if (!actions || !actions.length) {
       return Promise.resolve(response);
     }
-    const action = actions.shift();
+    const action = this._createLogicElement(actions.shift());
     return action.run(request, response)
     .then(() => {
       this.shadowRoot.removeChild(action);
@@ -147,5 +163,5 @@ class RequestHooksLogic extends Polymer.Element {
     });
   }
 }
-window.customElements.define('request-hooks-logic', RequestHooksLogic);
+window.customElements.define(RequestHooksLogic.is, RequestHooksLogic);
 </script>

@@ -31,7 +31,8 @@
     "iron-component-page": "PolymerElements/iron-component-page#^3.0.1",
     "arc-polyfills": "advanced-rest-client/arc-polyfills#^0.1.8",
     "variables-manager": "advanced-rest-client/variables-manager#^2.0.0",
-    "app-pouchdb": "PolymerElements/app-pouchdb#^2.1.1"
+    "app-pouchdb": "PolymerElements/app-pouchdb#^2.1.1",
+    "jexl": "advanced-rest-client/Jexl#^2.0.0"
   },
   "ignore": [
     "**/.*",
