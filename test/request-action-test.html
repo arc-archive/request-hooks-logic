@@ -1,7 +1,7 @@
 <!doctype html>
 <!--
 @license
-Copyright 2016 The Advanced REST client authors <arc@mulesoft.com>
+Copyright 2018 The Advanced REST client authors <arc@mulesoft.com>
 Licensed under the Apache License, Version 2.0 (the "License"); you may not
 use this file except in compliance with the License. You may obtain a copy of
 the License at
@@ -16,16 +16,127 @@ the License.
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
-
-    <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+    <script src="../../webcomponentsjs/webcomponents-loader.js"></script>
     <script src="../../web-component-tester/browser.js"></script>
-    <script src="../../iron-test-helpers/test-helpers.js"></script>
-    <link rel="import" href="../request-hooks-logic.html">
-    <link rel="import" href="../../arc-polyfills/arc-polyfills.html">
+    <link rel="import" href="../request-logic-action.html">
   </head>
   <body>
+    <test-fixture id="Basic">
+      <template>
+        <request-logic-action></request-logic-action>
+      </template>
+    </test-fixture>
     <script>
-    /* global assert, Request, RequestLogicAction */
+    suite('Basics', () => {
+      let element;
+      setup(() => {
+        element = fixture('Basic');
+      });
+
+      test('Computes _sourcePath', () => {
+        const path = 'a.b.c';
+        const compare = ['a', 'b', 'c'];
+        element.source = path;
+        assert.deepEqual(element._sourcePath, compare);
+      });
+
+      test('Computes _conditions', () => {
+        element.conditions = [{
+          source: 'response.status',
+          operator: 'equal',
+          condition: 200,
+          enabled: true
+        }];
+        assert.typeOf(element._conditions, 'array');
+        assert.lengthOf(element._conditions, 1);
+      });
+    });
+
+    suite('get extractor()', () => {
+      let element;
+      setup(function() {
+        element = fixture('Basic');
+      });
+
+      test('Returns request-data-extractor', () => {
+        const result = element.extractor;
+        assert.equal(result.nodeName, 'REQUEST-DATA-EXTRACTOR');
+      });
+
+      test('Creates reference handler', () => {
+        const old = element.$;
+        element.$ = undefined;
+        const result = element.extractor;
+        assert.ok(result);
+        element.$ = old;
+      });
+
+      test('Reeturns existing element', () => {
+        const result1 = element.extractor;
+        const result2 = element.extractor;
+        assert.isTrue(result1 === result2);
+      });
+    });
+
+    suite('_prepareConditions()', () => {
+      let element;
+      let conditions;
+      setup(function() {
+        element = fixture('Basic');
+        conditions = [{
+          source: 'response.status',
+          operator: 'equal',
+          condition: 200,
+          enabled: true
+        }, {
+          source: 'request.url',
+          operator: 'equal',
+          condition: 'http://4',
+          enabled: true
+        }];
+      });
+
+      test('Returns undefined when no argument', () => {
+        const result = element._prepareConditions();
+        assert.isUndefined(result);
+      });
+
+      test('Returns an array of conditions', () => {
+        const result = element._prepareConditions(conditions);
+        assert.typeOf(result, 'array');
+        assert.lengthOf(result, 2);
+        const item = result[0];
+        assert.equal(item.nodeName, 'REQUEST-LOGIC-CONDITION');
+      });
+
+      test('Condition is enabled', () => {
+        const result = element._prepareConditions(conditions);
+        assert.isTrue(result[0].enabled);
+      });
+
+      test('Condition has source', () => {
+        const result = element._prepareConditions(conditions);
+        assert.equal(result[0].source, conditions[0].source);
+      });
+
+      test('Condition has operator', () => {
+        const result = element._prepareConditions(conditions);
+        assert.equal(result[0].operator, conditions[0].operator);
+      });
+
+      test('Condition has condition', () => {
+        const result = element._prepareConditions(conditions);
+        assert.equal(result[0].condition, conditions[0].condition);
+      });
+
+      test('Ignores not enabled items', () => {
+        conditions[0].enabled = false;
+        const result = element._prepareConditions(conditions);
+        assert.lengthOf(result, 1);
+        assert.equal(result[0].source, conditions[1].source);
+      });
+    });
+
     suite('_performAction()', function() {
       const action = {
         source: 'request.url',
@@ -33,14 +144,17 @@ the License.
         destination: 'myVar'
       };
       const value = 'test-value';
-      var logic;
+      let logic;
       setup(function() {
-        logic = new RequestLogicAction(action);
+        logic = fixture('Basic');
+        logic.source = action.source;
+        logic.action = action.action;
+        logic.destination = action.destination;
       });
 
       test('Emits variable-update-action event', function(done) {
-        window.addEventListener('variable-update-action', function clb(e) {
-          window.removeEventListener('variable-update-action', clb);
+        logic.addEventListener('variable-update-action', function clb(e) {
+          logic.removeEventListener('variable-update-action', clb);
           assert.typeOf(e.detail, 'object');
           done();
         });
@@ -48,15 +162,15 @@ the License.
       });
 
       test('Emits variable property', function(done) {
-        window.addEventListener('variable-update-action', function clb(e) {
-          window.removeEventListener('variable-update-action', clb);
+        logic.addEventListener('variable-update-action', function clb(e) {
+          logic.removeEventListener('variable-update-action', clb);
           assert.equal(e.detail.variable, action.destination);
           done();
         });
         logic._performAction(value);
       });
 
-      test('Emits value property', function(done) {
+      test('Emits value property (on window)', function(done) {
         window.addEventListener('variable-update-action', function clb(e) {
           window.removeEventListener('variable-update-action', clb);
           assert.equal(e.detail.value, value);
@@ -64,41 +178,53 @@ the License.
         });
         logic._performAction(value);
       });
+
+      test('Throws when action is unknown', function() {
+        logic.action = 'test';
+        assert.throws(() => {
+          logic._performAction(value);
+        }, 'Unknown action: test');
+      });
     });
 
-    suite('Enabled state', function() {
-      const action = {
-        source: 'request.url.hash.hparam',
-        action: 'assign-variable',
-        destination: 'myVar',
-        enabled: false
-      };
-      const url = 'https://auth.domain.com/path/auth?query=value&a=b#hparam=hvalue&c=d';
-      var logic;
-      var request;
+    suite('_areConditionsMeet()', () => {
+      let element;
       setup(function() {
-        logic = new RequestLogicAction(action);
-        request = new Request(url, {
-          headers: {
-            'content-type': 'application/xml',
-            'x-www-token': 'test-token',
-            'content-encoding': 'gzip'
-          }
-        });
+        element = fixture('Basic');
+        element.conditions = [{
+          source: 'request.url',
+          operator: 'equal',
+          condition: 'http://test',
+          enabled: true
+        }];
       });
 
-      test('Sets enables property to false', function() {
-        assert.isFalse(logic.enabled);
+      test('Returns true if no conditions', () => {
+        element.conditions = undefined;
+        const result = element._areConditionsMeet({}, {});
+        assert.isTrue(result);
       });
 
-      test('Do not execute action', function() {
-        let called = false;
-        logic._prepareBodyValues = function() {
-          called = true;
-        };
-        return logic.run(request, undefined)
-        .then((result) => assert.isFalse(result))
-        .then(() => assert.isFalse(called));
+      test('Returns true if conditions are empty', () => {
+        element.conditions = [{
+          enabled: false
+        }];
+        const result = element._areConditionsMeet({}, {});
+        assert.isTrue(result);
+      });
+
+      test('Returns true when conditions are satisfied', () => {
+        const result = element._areConditionsMeet({
+          url: 'http://test'
+        }, {});
+        assert.isTrue(result);
+      });
+
+      test('Returns false when conditions are not satisfied', () => {
+        const result = element._areConditionsMeet({
+          url: 'https://test'
+        }, {});
+        assert.isFalse(result);
       });
     });
 
@@ -109,40 +235,73 @@ the License.
         destination: 'myVar'
       };
       const url = 'https://auth.domain.com/path/auth?query=value&a=b#hparam=hvalue&c=d';
-      var logic;
-      var request;
+      let logic;
+      let request;
       setup(function() {
-        logic = new RequestLogicAction(action);
-        request = new Request(url, {
-          headers: {
-            'content-type': 'application/xml',
-            'x-www-token': 'test-token',
-            'content-encoding': 'gzip'
-          }
+        logic = fixture('Basic');
+        logic.source = action.source;
+        logic.action = action.action;
+        logic.destination = action.destination;
+        request = {
+          url,
+          headers: 'content-type: application/xml\nx-www-token: ' +
+            'test-token\ncontent-encoding: gzip'
+        };
+      });
+
+      test('Returns a promise', function() {
+        const result = logic.run(request);
+        assert.typeOf(result.then, 'function');
+        return result;
+      });
+
+      test('Calls _areConditionsMeet()', () => {
+        const spy = sinon.spy(logic, '_areConditionsMeet');
+        return logic.run(request)
+        .then(() => {
+          assert.isTrue(spy.called);
         });
       });
 
-      test('Run return the promise', function() {
-        const result = logic.run(request);
-        assert.typeOf(result.then, 'function');
+      test('Calls _execute()', () => {
+        const spy = sinon.spy(logic, '_execute');
+        return logic.run(request, {})
+        .then(() => {
+          assert.isTrue(spy.called, 'Function is called');
+          assert.isTrue(spy.args[0][0] === request);
+          assert.deepEqual(spy.args[0][1], {});
+        });
+      });
+
+      test('Promise returns false when conditions are not met', () => {
+        logic.conditions = [{
+          source: 'request.url',
+          operator: 'equal',
+          condition: 'http://test',
+          enabled: true
+        }];
+        return logic.run(request)
+        .then((result) => {
+          assert.isFalse(result);
+        });
       });
 
       test('Fires variable-update-action event', function(done) {
-        window.addEventListener('variable-update-action', function clb(e) {
-          window.removeEventListener('variable-update-action', clb);
+        logic.addEventListener('variable-update-action', function clb(e) {
+          logic.removeEventListener('variable-update-action', clb);
           assert.typeOf(e.detail, 'object');
           done();
         });
         logic.run(request);
       });
 
-      test('Fires variable-store-action event', function(done) {
+      test('Fires variable-store-action event (on window)', function(done) {
         window.addEventListener('variable-store-action', function clb(e) {
           window.removeEventListener('variable-store-action', clb);
           assert.typeOf(e.detail, 'object');
           done();
         });
-        logic._action = 'store-variable';
+        logic.action = 'store-variable';
         logic.run(request);
       });
     });

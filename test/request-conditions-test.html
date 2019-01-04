@@ -1,7 +1,7 @@
 <!doctype html>
 <!--
 @license
-Copyright 2016 The Advanced REST client authors <arc@mulesoft.com>
+Copyright 2018 The Advanced REST client authors <arc@mulesoft.com>
 Licensed under the Apache License, Version 2.0 (the "License"); you may not
 use this file except in compliance with the License. You may obtain a copy of
 the License at
@@ -16,15 +16,16 @@ the License.
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
-
-    <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+    <script src="../../webcomponentsjs/webcomponents-loader.js"></script>
     <script src="../../web-component-tester/browser.js"></script>
-    <script src="../../iron-test-helpers/test-helpers.js"></script>
-    <link rel="import" href="../request-hooks-logic.html">
-    <link rel="import" href="../../arc-polyfills/arc-polyfills.html">
-    <link rel="import" href="../../arc-headers/arc-headers.html">
+    <link rel="import" href="../request-logic-condition.html">
   </head>
   <body>
+    <test-fixture id="Basic">
+      <template>
+        <request-logic-condition></request-logic-condition>
+      </template>
+    </test-fixture>
     <script>
     /* global assert, Request, Response, RequestLogicCondition */
     describe('RequestLogicCondition', function() {
@@ -43,7 +44,11 @@ the License.
       let c;
       describe('isEqual()', function() {
         beforeEach(function() {
-          c = new RequestLogicCondition(args);
+          c = fixture('Basic');
+          c.enabled = true;
+          c.source = args.source;
+          c.operator = args.operator;
+          c.condition = args.condition;
         });
 
         it('"a" equals "a"', function() {
@@ -113,7 +118,11 @@ the License.
       });
       describe('isNotEqual()', function() {
         beforeEach(function() {
-          c = new RequestLogicCondition(args);
+          c = fixture('Basic');
+          c.enabled = true;
+          c.source = args.source;
+          c.operator = args.operator;
+          c.condition = args.condition;
         });
 
         it('"a" not equals "a"', function() {
@@ -184,7 +193,11 @@ the License.
 
       describe('isLessThan()', function() {
         beforeEach(function() {
-          c = new RequestLogicCondition(args);
+          c = fixture('Basic');
+          c.enabled = true;
+          c.source = args.source;
+          c.operator = args.operator;
+          c.condition = args.condition;
         });
 
         it('1 less than 2', function() {
@@ -245,7 +258,11 @@ the License.
 
       describe('isLessThanEqual()', function() {
         beforeEach(function() {
-          c = new RequestLogicCondition(args);
+          c = fixture('Basic');
+          c.enabled = true;
+          c.source = args.source;
+          c.operator = args.operator;
+          c.condition = args.condition;
         });
 
         it('1 less than or equal 2', function() {
@@ -321,7 +338,11 @@ the License.
 
       describe('isGreaterThan()', function() {
         beforeEach(function() {
-          c = new RequestLogicCondition(args);
+          c = fixture('Basic');
+          c.enabled = true;
+          c.source = args.source;
+          c.operator = args.operator;
+          c.condition = args.condition;
         });
 
         it('1 greater than 2', function() {
@@ -392,7 +413,11 @@ the License.
 
       describe('isGreaterThanEqual()', function() {
         beforeEach(function() {
-          c = new RequestLogicCondition(args);
+          c = fixture('Basic');
+          c.enabled = true;
+          c.source = args.source;
+          c.operator = args.operator;
+          c.condition = args.condition;
         });
 
         it('1 greater than or equal 2', function() {
@@ -468,7 +493,11 @@ the License.
 
       describe('contains()', function() {
         beforeEach(function() {
-          c = new RequestLogicCondition(args);
+          c = fixture('Basic');
+          c.enabled = true;
+          c.source = args.source;
+          c.operator = args.operator;
+          c.condition = args.condition;
         });
 
         describe('Strings', function() {
@@ -617,7 +646,11 @@ the License.
 
       describe('checkCondition()', function() {
         beforeEach(function() {
-          c = new RequestLogicCondition(args);
+          c = fixture('Basic');
+          c.enabled = true;
+          c.source = args.source;
+          c.operator = args.operator;
+          c.condition = args.condition;
         });
 
         it('true for equal action', function() {
@@ -712,35 +745,18 @@ the License.
           }
         }]
       }`;
-      let options;
+      let request;
+      let response;
       let c;
       before(function() {
-        const response = new Response(jsonStr, {
-          headers: {
-            'content-type': 'application/json'
-          }
-        });
-        options = {
-          response: response,
-          request: new Request('/'),
-          responseBody: jsonStr,
-          requestBody: ''
+        request = {
+          url: '/'
         };
-      });
-
-      describe('Enabled state', function() {
-        const args = {
-          source: 'response.body.data.2.value',
-          operator: 'equal',
-          condition: 'array'
+        response = {
+          payload: jsonStr,
+          headers: 'content-type: application/json',
+          url: '/'
         };
-        beforeEach(function() {
-          c = new RequestLogicCondition(args);
-        });
-
-        it('Sets enabled property to true`', function() {
-          assert.isTrue(c.enabled);
-        });
       });
 
       describe('equal op', function() {
@@ -750,17 +766,21 @@ the License.
           condition: 'array'
         };
         beforeEach(function() {
-          c = new RequestLogicCondition(args);
+          c = fixture('Basic');
+          c.enabled = true;
+          c.source = args.source;
+          c.operator = args.operator;
+          c.condition = args.condition;
         });
 
         it('true action', function() {
-          const result = c.satisfied(options);
+          const result = c.satisfied(request, response);
           assert.isTrue(result);
         });
 
         it('false action', function() {
-          c._condition = 'not-equal';
-          const result = c.satisfied(options);
+          c.condition = 'not-equal';
+          const result = c.satisfied(request, response);
           assert.isFalse(result);
         });
       });
@@ -772,17 +792,21 @@ the License.
           condition: 'array'
         };
         beforeEach(function() {
-          c = new RequestLogicCondition(args);
+          c = fixture('Basic');
+          c.enabled = true;
+          c.source = args.source;
+          c.operator = args.operator;
+          c.condition = args.condition;
         });
 
         it('true for action', function() {
-          c._condition = 'other';
-          const result = c.satisfied(options);
+          c.condition = 'other';
+          const result = c.satisfied(request, response);
           assert.isTrue(result);
         });
 
         it('false for action', function() {
-          const result = c.satisfied(options);
+          const result = c.satisfied(request, response);
           assert.isFalse(result);
         });
       });
@@ -794,17 +818,21 @@ the License.
           condition: '2'
         };
         beforeEach(function() {
-          c = new RequestLogicCondition(args);
+          c = fixture('Basic');
+          c.enabled = true;
+          c.source = args.source;
+          c.operator = args.operator;
+          c.condition = args.condition;
         });
 
         it('true for action', function() {
-          const result = c.satisfied(options);
+          const result = c.satisfied(request, response);
           assert.isTrue(result);
         });
 
         it('false for action', function() {
-          c._condition = 0;
-          const result = c.satisfied(options);
+          c.condition = 0;
+          const result = c.satisfied(request, response);
           assert.isFalse(result);
         });
       });
@@ -816,17 +844,21 @@ the License.
           condition: '1'
         };
         beforeEach(function() {
-          c = new RequestLogicCondition(args);
+          c = fixture('Basic');
+          c.enabled = true;
+          c.source = args.source;
+          c.operator = args.operator;
+          c.condition = args.condition;
         });
 
         it('true for action', function() {
-          const result = c.satisfied(options);
+          const result = c.satisfied(request, response);
           assert.isTrue(result);
         });
 
         it('false for action', function() {
-          c._condition = 0;
-          const result = c.satisfied(options);
+          c.condition = 0;
+          const result = c.satisfied(request, response);
           assert.isFalse(result);
         });
       });
@@ -838,17 +870,21 @@ the License.
           condition: '0'
         };
         beforeEach(function() {
-          c = new RequestLogicCondition(args);
+          c = fixture('Basic');
+          c.enabled = true;
+          c.source = args.source;
+          c.operator = args.operator;
+          c.condition = args.condition;
         });
 
         it('true for action', function() {
-          const result = c.satisfied(options);
+          const result = c.satisfied(request, response);
           assert.isTrue(result);
         });
 
         it('false for action', function() {
-          c._condition = 2;
-          const result = c.satisfied(options);
+          c.condition = 2;
+          const result = c.satisfied(request, response);
           assert.isFalse(result);
         });
       });
@@ -860,17 +896,21 @@ the License.
           condition: '1'
         };
         beforeEach(function() {
-          c = new RequestLogicCondition(args);
+          c = fixture('Basic');
+          c.enabled = true;
+          c.source = args.source;
+          c.operator = args.operator;
+          c.condition = args.condition;
         });
 
         it('true for action', function() {
-          const result = c.satisfied(options);
+          const result = c.satisfied(request, response);
           assert.isTrue(result);
         });
 
         it('false for action', function() {
-          c._condition = 2;
-          const result = c.satisfied(options);
+          c.condition = 2;
+          const result = c.satisfied(request, response);
           assert.isFalse(result);
         });
       });
@@ -883,17 +923,21 @@ the License.
             condition: 'token'
           };
           beforeEach(function() {
-            c = new RequestLogicCondition(args);
+            c = fixture('Basic');
+            c.enabled = true;
+            c.source = args.source;
+            c.operator = args.operator;
+            c.condition = args.condition;
           });
 
           it('true for action', function() {
-            const result = c.satisfied(options);
+            const result = c.satisfied(request, response);
             assert.isTrue(result);
           });
 
           it('false for action', function() {
-            c._condition = 'hello';
-            const result = c.satisfied(options);
+            c.condition = 'hello';
+            const result = c.satisfied(request, response);
             assert.isFalse(result);
           });
         });
@@ -905,17 +949,21 @@ the License.
             condition: 'a'
           };
           beforeEach(function() {
-            c = new RequestLogicCondition(args);
+            c = fixture('Basic');
+            c.enabled = true;
+            c.source = args.source;
+            c.operator = args.operator;
+            c.condition = args.condition;
           });
 
           it('true for action', function() {
-            const result = c.satisfied(options);
+            const result = c.satisfied(request, response);
             assert.isTrue(result);
           });
 
           it('false for action', function() {
-            c._condition = 'b';
-            const result = c.satisfied(options);
+            c.condition = 'b';
+            const result = c.satisfied(request, response);
             assert.isFalse(result);
           });
         });
@@ -927,17 +975,21 @@ the License.
             condition: 'nextPageToken'
           };
           beforeEach(function() {
-            c = new RequestLogicCondition(args);
+            c = fixture('Basic');
+            c.enabled = true;
+            c.source = args.source;
+            c.operator = args.operator;
+            c.condition = args.condition;
           });
 
           it('true for action', function() {
-            const result = c.satisfied(options);
+            const result = c.satisfied(request, response);
             assert.isTrue(result);
           });
 
           it('false for action', function() {
-            c._condition = 'nextPageTokenNot';
-            const result = c.satisfied(options);
+            c.condition = 'nextPageTokenNot';
+            const result = c.satisfied(request, response);
             assert.isFalse(result);
           });
         });
@@ -964,41 +1016,42 @@ the License.
           }
         }]
       }`;
-      let options;
       let c;
-      before(function() {
-        const response = new Response(jsonStr, {
-          headers: {
-            'content-type': 'application/json'
-          }
-        });
-        options = {
-          response: response,
-          request: new Request('/'),
-          responseBody: jsonStr,
-          requestBody: ''
-        };
-      });
       const args = {
         source: 'response.body',
         operator: 'contains',
-        condition: 'nextPageToken',
-        enabled: false
+        condition: 'nextPageToken'
       };
+      let request;
+      let response;
+      before(function() {
+        request = {
+          url: '/'
+        };
+        response = {
+          payload: jsonStr,
+          headers: 'content-type: application/json',
+          url: '/'
+        };
+      });
       beforeEach(function() {
-        c = new RequestLogicCondition(args);
+        c = fixture('Basic');
+        c.enabled = false;
+        c.source = args.source;
+        c.operator = args.operator;
+        c.condition = args.condition;
       });
 
       it('Sets enabled property to false', function() {
         assert.isFalse(c.enabled);
       });
 
-      it('satisfied() always returns true', function() {
-        const result = c.satisfied(options);
-        assert.isTrue(result);
-        c._condition = 'nextPageTokenNot';
-        const result2 = c.satisfied(options);
-        assert.isTrue(result2);
+      it('satisfied() always returns false', function() {
+        const result = c.satisfied(request, response);
+        assert.isFalse(result);
+        c.condition = 'nextPageTokenNot';
+        const result2 = c.satisfied(request, response);
+        assert.isFalse(result2);
       });
     });
     </script>

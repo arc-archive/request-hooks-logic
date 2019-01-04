@@ -11,11 +11,157 @@ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 License for the specific language governing permissions and limitations under
 the License.
 -->
-<script src="lib/action-event-emitter.js"></script>
-<script src="lib/iterator-object.js"></script>
-<script src="lib/request-condition.js"></script>
-<script src="lib/data-extractor.js"></script>
-<script src="lib/json-extractor.js"></script>
-<script src="lib/xml-extractor.js"></script>
-<script src="lib/request-action.js"></script>
-<script src="lib/request-logic-runner.js"></script>
+<link rel="import" href="../polymer/polymer-element.html">
+<link rel="import" href="../variables-evaluator/variables-evaluator.html">
+<link rel="import" href="request-logic-action.html">
+<script>
+/**
+ * A component responsible for logic for ARC's request and responses actions.
+ *
+ * Actions are logical operations that the user can define in the request panel
+ * which the result is assigned to a variable.
+ *
+ * @polymer
+ * @customElement
+ * @memberof LogicElements
+ */
+class RequestHooksLogic extends Polymer.Element {
+  static get is() {
+    return 'request-hooks-logic';
+  }
+
+  get evalElement() {
+    if (!this.$) {
+      this.$ = {};
+    }
+    if (!this.$.eval) {
+      this.$.eval = document.createElement('variables-evaluator');
+      this.$.eval.noBeforeRequest = true;
+      this.$.eval.eventTarget = this;
+      this.shadowRoot.appendChild(this.$.eval);
+    }
+    return this.$.eval;
+  }
+
+  constructor() {
+    super();
+    this._handler = this._handler.bind(this);
+    this._shadowRoot = this.attachShadow({mode: 'open'});
+  }
+
+  connectedCallback() {
+    super.connectedCallback();
+    window.addEventListener('run-response-actions', this._handler);
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    window.removeEventListener('run-response-actions', this._handler);
+  }
+  /**
+   * A handler for the `run-response-actions` custom event.
+   * It cancels the event and processes the actions.
+   * See componnent description for event details info.
+   * @param {CustomEvent} e
+   */
+  _handler(e) {
+    if (e.defaultPrevented) {
+      return;
+    }
+    e.preventDefault();
+    e.detail.result = this.processActions(e.detail.actions,
+      e.detail.request, e.detail.response);
+  }
+  /**
+   * Processes actions when response object is ready.
+   * @param {Array<Object>} actions List of actions to perform
+   * @param {Object} request ArcRequest object. See this doc for data model:
+   * https://github.com/advanced-rest-client/api-components-api/blob/master/docs/api-request-and-response.md#api-request
+   * @param {Object} response ArcResponse object. See this doc for data model:
+   * https://github.com/advanced-rest-client/api-components-api/blob/master/docs/api-request-and-response.md#api-request
+   * @return {Promise} A promise resolved when actions were performed.
+   */
+  processActions(actions, request, response) {
+    if (!actions || !request || !response) {
+      return Promise.reject(new Error('Expecting 3 arguments.'));
+    }
+    const p = [];
+    actions.forEach((action) => {
+      if (action.enabled === false) {
+        return;
+      }
+      p.push(this._evaluateAction(action));
+    });
+    return Promise.all(p)
+    .then((actions) => this._runRecursive(actions, request, response));
+  }
+
+  _evaluateAction(action) {
+    const copy = this._copyAction(action);
+    const mainProps = ['destination', 'source'];
+    const iteratorProps = ['condition', 'source'];
+    return this.evalElement.evaluateVariables(copy, mainProps)
+    .then(() => {
+      if (copy.iterator) {
+        return this.evalElement.evaluateVariables(copy.iterator, iteratorProps);
+      }
+    })
+    .then(() => copy);
+  }
+
+  /**
+   * Creates a copy of the actio object.
+   *
+   * @param {Object} action Action model
+   * @return {Object} Deep copy of the action model.
+   */
+  _copyAction(action) {
+    const result = Object.assign({}, action);
+    if (result.iterator) {
+      result.iterator = Object.assign({}, result.iterator);
+    }
+    if (result.conditions && result.conditions.length) {
+      result.conditions = result.conditions.map((cond) => {
+        return Object.assign({}, cond);
+      });
+    }
+    return result;
+  }
+  /**
+   * Creates instance of `request-logic-action` element, sets its properties and
+   * inserts it into shadow DOM.
+   * @param {Object} action Action definition
+   * @return {Element}
+   */
+  _createLogicElement(action) {
+    const inst = document.createElement('request-logic-action');
+    inst.source = action.source;
+    inst.action = action.action;
+    inst.destination = action.destination;
+    inst.conditions = action.conditions;
+    inst.iterator = action.iterator;
+    inst.iteratorEnabled = action.hasIterator;
+    this.shadowRoot.appendChild(inst);
+    return inst;
+  }
+  /**
+   * Runs acrions recuresively until all actions are executed.
+   * @param {Array<Object>} actions Action definition
+   * @param {Object} request ARC request object
+   * @param {Object} response ARC response object
+   * @return {Promise}
+   */
+  _runRecursive(actions, request, response) {
+    if (!actions || !actions.length) {
+      return Promise.resolve(response);
+    }
+    const action = this._createLogicElement(actions.shift());
+    return action.run(request, response)
+    .then(() => {
+      this.shadowRoot.removeChild(action);
+      return this._runRecursive(actions, request, response);
+    });
+  }
+}
+window.customElements.define(RequestHooksLogic.is, RequestHooksLogic);
+</script>
