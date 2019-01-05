@@ -1,3 +1,26 @@
+<a name="2.0.0"></a>
+# [2.0.0](https://github.com/advanced-rest-client/request-hooks-logic/compare/0.1.10...2.0.0) (2019-01-05)
+
+
+### Breaking
+
+* Redesign of the component. Support for Polymer 2 ([358317fb90bb767e670cf4fd2b3e34a9e36c3a83](https://github.com/advanced-rest-client/request-hooks-logic/commit/358317fb90bb767e670cf4fd2b3e34a9e36c3a83))
+
+### Docs
+
+* Adding documentation ([1156563a94f7682b3ca12801656698a2febc32cb](https://github.com/advanced-rest-client/request-hooks-logic/commit/1156563a94f7682b3ca12801656698a2febc32cb))
+
+### Fix
+
+* Transforming payload data to string before use in data extractor ([72969e4ae236bcb9f083b28f9c888909f4613f78](https://github.com/advanced-rest-client/request-hooks-logic/commit/72969e4ae236bcb9f083b28f9c888909f4613f78))
+
+### Update
+
+* Adding Polymer API ([97176a19b93712c9b4eb3917254cfd533ef8bed6](https://github.com/advanced-rest-client/request-hooks-logic/commit/97176a19b93712c9b4eb3917254cfd533ef8bed6))
+* Updated Travis configuration to connect to Sauce Labs. ([76d52e3460b39a1825cd0f45986bba82412d2292](https://github.com/advanced-rest-client/request-hooks-logic/commit/76d52e3460b39a1825cd0f45986bba82412d2292))
+
+
+
 <a name="0.1.11"></a>
 ## [0.1.11](https://github.com/advanced-rest-client/request-hooks-logic/compare/0.1.10...0.1.11) (2018-02-16)
 
