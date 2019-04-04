@@ -5,23 +5,21 @@
  *   https://github.com/Polymer/tools/tree/master/packages/gen-typescript-declarations
  *
  * To modify these typings, edit the source file(s):
- *   request-logic-action.html
+ *   request-logic-action.js
  */
 
 
 // tslint:disable:variable-name Describing an API that's defined elsewhere.
 // tslint:disable:no-any describes the API as best we are able today
 
-/// <reference path="../polymer/types/polymer-element.d.ts" />
-/// <reference path="request-logic-condition.d.ts" />
-/// <reference path="request-data-extractor.d.ts" />
+export {RequestLogicAction};
 
 declare namespace LogicElements {
 
   /**
    * An element that runs request / response action.
    */
-  class RequestLogicAction extends Polymer.Element {
+  class RequestLogicAction extends PolymerElement {
     readonly extractor: object|null;
 
     /**
@@ -140,6 +138,9 @@ declare namespace LogicElements {
   }
 }
 
-interface HTMLElementTagNameMap {
-  "request-logic-action": LogicElements.RequestLogicAction;
+declare global {
+
+  interface HTMLElementTagNameMap {
+    "request-logic-action": LogicElements.RequestLogicAction;
+  }
 }

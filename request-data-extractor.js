@@ -1,4 +1,4 @@
-<!--
+/**
 @license
 Copyright 2018 The Advanced REST client authors <arc@mulesoft.com>
 Licensed under the Apache License, Version 2.0 (the "License"); you may not
@@ -10,16 +10,14 @@ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
 WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 License for the specific language governing permissions and limitations under
 the License.
--->
-<link rel="import" href="../polymer/polymer-element.html">
-<link rel="import" href="../headers-parser-behavior/headers-parser-behavior.html">
-<link rel="import" href="request-logic-condition.html">
-
-<script>
+*/
+import {PolymerElement} from '../../@polymer/polymer/polymer-element.js';
+import {HeadersParserMixin} from '../../@advanced-rest-client/headers-parser-mixin/headers-parser-mixin.js';
+import './request-logic-condition.js';
 /**
  * Class responsible for extracting data from JSON values.
  */
-class ActionIterableObject {
+export class ActionIterableObject {
   /**
    * @constructor
    * @param {Object} opts Iterator options
@@ -78,7 +76,7 @@ class ActionIterableObject {
 /**
  * Class responsible for extracting data from JSON values.
  */
-class JsonExtractor {
+export class JsonExtractor {
   /**
    * @constructor
    * @param {String|Object|Array} json JSON string or object. Strings are
@@ -254,7 +252,7 @@ class JsonExtractor {
 /**
  * A helper class to extract data from an XML response.
  */
-class XmlExtractor {
+export class XmlExtractor {
   /**
    * @constructor
    * @param {String} xml XML string.
@@ -359,10 +357,9 @@ class XmlExtractor {
  * @polymer
  * @customElement
  * @memberof LogicElements
- * @appliesMixin ArcBehaviors.HeadersParserBehavior
+ * @appliesMixin HeadersParserMixin
  */
-class RequestDataExtractor extends ArcBehaviors.HeadersParserBehavior(Polymer.Element) {
-  static get is() { return 'request-data-extractor'; }
+export class RequestDataExtractor extends HeadersParserMixin(PolymerElement) {
   static get properties() {
     return {
       /**
@@ -544,5 +541,4 @@ class RequestDataExtractor extends ArcBehaviors.HeadersParserBehavior(Polymer.El
     }
   }
 }
-window.customElements.define(RequestDataExtractor.is, RequestDataExtractor);
-</script>
+window.customElements.define('request-data-extractor', RequestDataExtractor);

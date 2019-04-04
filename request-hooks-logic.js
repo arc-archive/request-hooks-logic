@@ -1,4 +1,4 @@
-<!--
+/**
 @license
 Copyright 2018 The Advanced REST client authors <arc@mulesoft.com>
 Licensed under the Apache License, Version 2.0 (the "License"); you may not
@@ -10,11 +10,11 @@ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
 WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 License for the specific language governing permissions and limitations under
 the License.
--->
-<link rel="import" href="../polymer/polymer-element.html">
-<link rel="import" href="../variables-evaluator/variables-evaluator.html">
-<link rel="import" href="request-logic-action.html">
-<script>
+*/
+import {PolymerElement} from '../../@polymer/polymer/polymer-element.js';
+import {html} from '../../@polymer/polymer/lib/utils/html-tag.js';
+import '../../@advanced-rest-client/variables-evaluator/variables-evaluator.js';
+import './request-logic-action.js';
 /**
  * A component responsible for logic for ARC's request and responses actions.
  *
@@ -25,22 +25,32 @@ the License.
  * @customElement
  * @memberof LogicElements
  */
-class RequestHooksLogic extends Polymer.Element {
-  static get is() {
-    return 'request-hooks-logic';
+export class RequestHooksLogic extends PolymerElement {
+  static get template() {
+    return html`<style>
+    :host {
+      display: none !important;
+    }
+    </style>
+    <variables-evaluator id="eval" jexl-path="[[jexlPath]]" jexl="[[jexl]]" no-before-request></variables-evaluator>`;
   }
 
-  get evalElement() {
-    if (!this.$) {
-      this.$ = {};
-    }
-    if (!this.$.eval) {
-      this.$.eval = document.createElement('variables-evaluator');
-      this.$.eval.noBeforeRequest = true;
-      this.$.eval.eventTarget = this;
-      this.shadowRoot.appendChild(this.$.eval);
-    }
-    return this.$.eval;
+  static get properties() {
+    return {
+      /**
+       * A reference name to the Jexl object.
+       * Use dot notation to access it from the `window` object.
+       * To set class pointer use `jexl` property.
+       */
+      jexlPath: String,
+      /**
+       * A Jexl class reference.
+       * If this value is set it must be a pointer to the Jexl class and
+       * `jexlPath` is ignored.
+       * This property is set automatically when `jexlPath` is processed.
+       */
+      jexl: Object
+    };
   }
 
   constructor() {
@@ -52,6 +62,7 @@ class RequestHooksLogic extends Polymer.Element {
   connectedCallback() {
     super.connectedCallback();
     window.addEventListener('run-response-actions', this._handler);
+    this.$.eval.eventTarget = this;
   }
 
   disconnectedCallback() {
@@ -100,10 +111,10 @@ class RequestHooksLogic extends Polymer.Element {
     const copy = this._copyAction(action);
     const mainProps = ['destination', 'source'];
     const iteratorProps = ['condition', 'source'];
-    return this.evalElement.evaluateVariables(copy, mainProps)
+    return this.$.eval.evaluateVariables(copy, mainProps)
     .then(() => {
       if (copy.iterator) {
-        return this.evalElement.evaluateVariables(copy.iterator, iteratorProps);
+        return this.$.eval.evaluateVariables(copy.iterator, iteratorProps);
       }
     })
     .then(() => copy);
@@ -163,5 +174,4 @@ class RequestHooksLogic extends Polymer.Element {
     });
   }
 }
-window.customElements.define(RequestHooksLogic.is, RequestHooksLogic);
-</script>
+window.customElements.define('request-hooks-logic', RequestHooksLogic);

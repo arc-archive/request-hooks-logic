@@ -1,4 +1,4 @@
-<!--
+/**
 @license
 Copyright 2018 The Advanced REST client authors <arc@mulesoft.com>
 Licensed under the Apache License, Version 2.0 (the "License"); you may not
@@ -10,11 +10,9 @@ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
 WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 License for the specific language governing permissions and limitations under
 the License.
--->
-<link rel="import" href="../polymer/polymer-element.html">
-<link rel="import" href="request-data-extractor.html">
-
-<script>
+*/
+import {PolymerElement} from '../../@polymer/polymer/polymer-element.js';
+import './request-data-extractor.js';
 /**
  * An element that performs a logic condition check defined in request / response
  * actions for ARC.
@@ -23,8 +21,7 @@ the License.
  * @customElement
  * @memberof LogicElements
  */
-class RequestLogicCondition extends Polymer.Element {
-  static get is() { return 'request-logic-condition'; }
+export class RequestLogicCondition extends PolymerElement {
   static get properties() {
     return {
       /**
@@ -238,5 +235,4 @@ class RequestLogicCondition extends Polymer.Element {
     return value.test(re);
   }
 }
-window.customElements.define(RequestLogicCondition.is, RequestLogicCondition);
-</script>
+window.customElements.define('request-logic-condition', RequestLogicCondition);

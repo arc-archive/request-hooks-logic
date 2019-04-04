@@ -1,33 +1,61 @@
 {
-  "name": "@advanced-rest-client/request-hooks-logic",
   "description": "Package containing a logic for creating HTTP request / response hooks",
-  "version": "2.0.0",
-  "scripts": {
-    "test": "polymer test --plugin local",
-    "lint": "polymer lint request-hooks-logic.html",
-    "test-sauce": "polymer test --plugin sauce --job-name \"request-hooks-logic:local-test\"",
-    "update-types": "gen-typescript-declarations --deleteExisting --outDir ."
-  },
-  "public": true,
-  "repository": {
-    "type": "git",
-    "url": "git+ssh://git@github.com/advanced-rest-client/request-hooks-logic.git"
-  },
   "keywords": [
     "api-console",
     "builder",
     "node"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/advanced-rest-client/request-hooks-logic.git"
+  },
+  "homepage": "https://github.com/advanced-rest-client/request-hooks-logic#readme",
+  "name": "@advanced-rest-client/request-hooks-logic",
+  "version": "3.0.0-preview.1",
+  "scripts": {
+    "test": "polymer test --plugin local",
+    "lint": "polymer lint request-hooks-logic.html",
+    "test-sauce": "polymer test --plugin sauce --job-name \"request-hooks-logic:local-test\"",
+    "update-types": "gen-typescript-declarations --deleteExisting --outDir .",
+    "prepare": "node dev-lib/prepare.js"
+  },
+  "public": true,
   "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/advanced-rest-client/request-hooks-logic/issues"
   },
-  "homepage": "https://github.com/advanced-rest-client/request-hooks-logic#readme",
   "devDependencies": {
-    "@polymer/gen-typescript-declarations": "^1.6.0"
+    "@advanced-rest-client/variables-manager": "^3.0.0-preview.1",
+    "@babel/core": "^7.4.0",
+    "@babel/preset-env": "^7.4.2",
+    "@polymer/gen-typescript-declarations": "^1.6.0",
+    "@polymer/iron-component-page": "^4.0.0",
+    "@polymer/iron-demo-helpers": "^3.0.0",
+    "@polymer/iron-test-helpers": "^3.0.0",
+    "@polymer/test-fixture": "^4.0.2",
+    "@webcomponents/webcomponentsjs": "^2.0.0",
+    "babel-plugin-minify-mangle-names": "^0.5.0",
+    "browserify": "^16.2.3",
+    "chai": "^4.2.0",
+    "fs-extra": "^7.0.1",
+    "jexl": "^2.1.1",
+    "mocha": "^5.2.0",
+    "sinon": "^7.2.3",
+    "uglify-js": "^3.5.2",
+    "wct-mocha": "^1.0.0"
   },
   "authors": [
     "Pawel Psztyc",
     "The Advanced REST client authors <arc@mulesoft.com>"
-  ]
+  ],
+  "main": "request-hooks-logic.js",
+  "contributors": [
+    "Pawel Psztyc",
+    "The Advanced REST client authors <arc@mulesoft.com>"
+  ],
+  "dependencies": {
+    "@advanced-rest-client/headers-parser-mixin": "^3.0.0-preview.3",
+    "@advanced-rest-client/variables-evaluator": "^3.0.0-preview.2",
+    "@polymer/polymer": "^3.0.0"
+  }
 }

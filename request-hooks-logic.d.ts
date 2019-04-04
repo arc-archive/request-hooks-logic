@@ -5,16 +5,14 @@
  *   https://github.com/Polymer/tools/tree/master/packages/gen-typescript-declarations
  *
  * To modify these typings, edit the source file(s):
- *   request-hooks-logic.html
+ *   request-hooks-logic.js
  */
 
 
 // tslint:disable:variable-name Describing an API that's defined elsewhere.
 // tslint:disable:no-any describes the API as best we are able today
 
-/// <reference path="../polymer/types/polymer-element.d.ts" />
-/// <reference path="../variables-evaluator/variables-evaluator.d.ts" />
-/// <reference path="request-logic-action.d.ts" />
+export {RequestHooksLogic};
 
 declare namespace LogicElements {
 
@@ -24,8 +22,22 @@ declare namespace LogicElements {
    * Actions are logical operations that the user can define in the request panel
    * which the result is assigned to a variable.
    */
-  class RequestHooksLogic extends Polymer.Element {
-    readonly evalElement: any;
+  class RequestHooksLogic extends PolymerElement {
+
+    /**
+     * A reference name to the Jexl object.
+     * Use dot notation to access it from the `window` object.
+     * To set class pointer use `jexl` property.
+     */
+    jexlPath: string|null|undefined;
+
+    /**
+     * A Jexl class reference.
+     * If this value is set it must be a pointer to the Jexl class and
+     * `jexlPath` is ignored.
+     * This property is set automatically when `jexlPath` is processed.
+     */
+    jexl: object|null|undefined;
     connectedCallback(): void;
     disconnectedCallback(): void;
 
@@ -76,6 +88,9 @@ declare namespace LogicElements {
   }
 }
 
-interface HTMLElementTagNameMap {
-  "request-hooks-logic": LogicElements.RequestHooksLogic;
+declare global {
+
+  interface HTMLElementTagNameMap {
+    "request-hooks-logic": LogicElements.RequestHooksLogic;
+  }
 }
