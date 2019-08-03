@@ -96,3 +96,7 @@
 
 
 
+# [3.0.0](https://github.com/advanced-rest-client/request-hooks-logic/compare/0.1.10...3.0.0) (2019-08-03)
+
+
+
