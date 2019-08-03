@@ -12,6 +12,8 @@
 // tslint:disable:variable-name Describing an API that's defined elsewhere.
 // tslint:disable:no-any describes the API as best we are able today
 
+import {LitElement} from 'lit-element';
+
 export {RequestLogicCondition};
 
 declare namespace LogicElements {
@@ -20,8 +22,8 @@ declare namespace LogicElements {
    * An element that performs a logic condition check defined in request / response
    * actions for ARC.
    */
-  class RequestLogicCondition extends PolymerElement {
-    readonly extractor: object|null;
+  class RequestLogicCondition extends LitElement {
+    readonly extractor: Element|null;
 
     /**
      * A flag to determine if the condition is enabled.
@@ -43,6 +45,7 @@ declare namespace LogicElements {
      * A value to test against the source value.
      */
     condition: string|null|undefined;
+    constructor();
 
     /**
      * Checks if the condition has been satified for current request and response

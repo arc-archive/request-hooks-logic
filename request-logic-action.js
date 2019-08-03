@@ -11,31 +11,27 @@ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 License for the specific language governing permissions and limitations under
 the License.
 */
-import {PolymerElement} from '../../@polymer/polymer/polymer-element.js';
+import { LitElement } from 'lit-element';
 import './request-logic-condition.js';
 import './request-data-extractor.js';
 /**
  * An element that runs request / response action.
  *
- * @polymer
  * @customElement
  * @memberof LogicElements
  */
-export class RequestLogicAction extends PolymerElement {
+export class RequestLogicAction extends LitElement {
   static get properties() {
     return {
       /**
        * Action's source value
        */
-      source: String,
+      source: { type: String },
       /**
        * Source as a path.
        * @type {Array<String>}
        */
-      _sourcePath: {
-        type: Array,
-        computed: '_computeSourcePath(source)'
-      },
+      _sourcePath: { type: Array },
       /**
        * An action to perform.
        * Supported actions are:
@@ -43,43 +39,65 @@ export class RequestLogicAction extends PolymerElement {
        * - assign-variable
        * - store-variable
        */
-      action: String,
+      action: { type: String },
       /**
        * The destination variable name.
        */
-      destination: String,
+      destination: { type: String },
       /**
        * List of conditions to use. See RequestLogicCondition class for
        * description.
        * @type {Array<Object>}
        */
-      conditions: Array,
+      conditions: { type: Array },
       // Computed list of condition instances
-      _conditions: {
-        type: Array,
-        computed: '_prepareConditions(conditions)'
-      },
+      _conditionsList: { type: Array },
       /**
        * Iterator object.
        * See `request-actions-panel` for more details.
        */
-      iterator: Object,
-      iteratorEnabled: Boolean
+      iterator: { type: Object },
+      iteratorEnabled: { type: Boolean }
     };
   }
 
+  get source() {
+    return this._source;
+  }
+
+  set source(value) {
+    const old = this._source;
+    if (value === old) {
+      return;
+    }
+    this._source = value;
+    this._sourcePath = this._computeSourcePath(value);
+  }
+
+  get conditions() {
+    return this._conditions;
+  }
+
+  set conditions(value) {
+    const old = this._conditions;
+    if (value === old) {
+      return;
+    }
+    this._conditions = value;
+    this._conditionsList = this._prepareConditions(value);
+  }
+
   /**
-   * @return {Object} A reference to `request-data-extractor` component
+   * @return {Element} A reference to `request-data-extractor` component
    */
   get extractor() {
-    if (!this.$) {
-      this.$ = {};
-    }
     const k = 'request-data-extractor';
-    if (!this.$[k]) {
-      this.$[k] = document.createElement(k);
+    let node = this.shadowRoot.querySelector(k);
+    if (!node) {
+      node = document.createElement(k);
+      this.shadowRoot.appendChild(node);
     }
-    return this.$[k];
+    return node;
   }
 
   _computeSourcePath(source) {
@@ -122,12 +140,12 @@ export class RequestLogicAction extends PolymerElement {
    * performed or `false` if the action wasn't performed because haven't meet
    * defined conditions.
    */
-  run(request, response) {
+  async run(request, response) {
     const cResult = this._areConditionsMeet(request, response);
     if (!cResult) {
-      return Promise.resolve(false);
+      return false;
     }
-    return this._execute(request, response);
+    return await this._execute(request, response);
   }
   /**
    * Executes the action after the condisions are meet.
@@ -136,15 +154,15 @@ export class RequestLogicAction extends PolymerElement {
    * @param {Response} response ARC response object
    * @return {Promise} Promise resolved fo Boolean `true`
    */
-  _execute(request, response) {
+  async _execute(request, response) {
     const extractor = this.extractor;
     extractor.request = request;
     extractor.response = response;
     extractor.path = this.source;
     const iterator = this.iteratorEnabled ? this.iterator : undefined;
     const value = extractor.extract(iterator);
-    return this._performAction(value)
-    .then(() => true);
+    await this._performAction(value);
+    return true;
   }
   /**
    * Checks is conditions for the actions are meet.
@@ -154,7 +172,7 @@ export class RequestLogicAction extends PolymerElement {
    * @return {Boolean} False of any of the conditions aren't meet.
    */
   _areConditionsMeet(request, response) {
-    const cond = this._conditions;
+    const cond = this._conditionsList;
     if (!cond || !cond.length) {
       return true;
     }
@@ -188,7 +206,7 @@ export class RequestLogicAction extends PolymerElement {
    * @param {?String} value A value read from the source path.
    * @return {Promise} A promise resolved when the value is updated.
    */
-  _assignVariable(value) {
+  async _assignVariable(value) {
     const detail = {
       variable: this.destination,
       value: value
@@ -198,7 +216,6 @@ export class RequestLogicAction extends PolymerElement {
       composed: true,
       detail
     }));
-    return Promise.resolve();
   }
   /**
    * Assigns value to a variable.
@@ -210,7 +227,7 @@ export class RequestLogicAction extends PolymerElement {
    * @param {?String} value A value read from the source path.
    * @return {Promise} A promise resolved when the value is updated.
    */
-  _storeVariable(value) {
+  async _storeVariable(value) {
     const detail = {
       variable: this.destination,
       value: value
@@ -220,7 +237,6 @@ export class RequestLogicAction extends PolymerElement {
       composed: true,
       detail
     }));
-    return Promise.resolve();
   }
 }
 window.customElements.define('request-logic-action', RequestLogicAction);

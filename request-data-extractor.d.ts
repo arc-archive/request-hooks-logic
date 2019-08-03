@@ -12,6 +12,10 @@
 // tslint:disable:variable-name Describing an API that's defined elsewhere.
 // tslint:disable:no-any describes the API as best we are able today
 
+import {LitElement} from 'lit-element';
+
+import {HeadersParserMixin} from '@advanced-rest-client/headers-parser-mixin/headers-parser-mixin.js';
+
 export {ActionIterableObject};
 
 /**
@@ -266,6 +270,16 @@ declare namespace LogicElements {
      * @returns Value for the path.
      */
     _getDataHeaders(source: Request|Response|null, path: Array<String|null>|null): Headers|String|null;
+
+    /**
+     * Returns a value for the payload field.
+     *
+     * @param source An object to read the url value from.
+     * @param path Path to the object
+     * @param iterator Iterator model. Used only with response body.
+     * @returns Value for the path.
+     */
+    _getDataPayload(source: Request|Response|null, path: Array<String|null>|null, iterator: object|null): String|null;
 
     /**
      * Gets a value from a text for current path. Path is part of the

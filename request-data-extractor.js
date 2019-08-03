@@ -11,8 +11,8 @@ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 License for the specific language governing permissions and limitations under
 the License.
 */
-import {PolymerElement} from '../../@polymer/polymer/polymer-element.js';
-import {HeadersParserMixin} from '../../@advanced-rest-client/headers-parser-mixin/headers-parser-mixin.js';
+import { LitElement } from 'lit-element';
+import { HeadersParserMixin } from '@advanced-rest-client/headers-parser-mixin/headers-parser-mixin.js';
 import './request-logic-condition.js';
 /**
  * Class responsible for extracting data from JSON values.
@@ -128,7 +128,7 @@ export class JsonExtractor {
    */
   extract() {
     if (this._iterator.valid) {
-      let obj = this._getValue(this._data, this._iterator.source);
+      const obj = this._getValue(this._data, this._iterator.source);
       if (!obj) {
         return;
       }
@@ -359,32 +359,34 @@ export class XmlExtractor {
  * @memberof LogicElements
  * @appliesMixin HeadersParserMixin
  */
-export class RequestDataExtractor extends HeadersParserMixin(PolymerElement) {
+export class RequestDataExtractor extends HeadersParserMixin(LitElement) {
   static get properties() {
     return {
       /**
        * ARC request object
        */
-      request: Object,
+      request: { type: Object },
       /**
        * ARC response object
        */
-      response: Object,
+      response: { type: Object },
       /**
        * Source path delimiter
        */
-      pathDelimiter: {
-        type: String,
-        value: '.'
-      },
+      pathDelimiter: { type: String },
       /**
        * Source data path. Either array of path segments
        * or full path as string.
        *
        * @type {Array<String>|String}
        */
-      path: String
+      path: { type: String }
     };
+  }
+
+  constructor() {
+    super();
+    this.pathDelimiter = '.';
   }
 
   /**
@@ -409,17 +411,7 @@ export class RequestDataExtractor extends HeadersParserMixin(PolymerElement) {
       case 'url': return this._getDataUrl(source.url, path.slice(2));
       case 'headers': return this._getDataHeaders(source, path.slice(2));
       case 'status': return source.status;
-      case 'body':
-        const ct = this.getContentType(source.headers);
-        if (!ct) {
-          return;
-        }
-        if (path[0] === 'request') {
-          source = this.request.payload;
-        } else {
-          source = this.response.payload;
-        }
-        return this._getPayloadValue(source, ct, path.slice(2), iterator);
+      case 'body': return this._getDataPayload(source, path, iterator);
       default: throw new Error('Unknown path for source ' + path[0]);
     }
   }
@@ -487,6 +479,7 @@ export class RequestDataExtractor extends HeadersParserMixin(PolymerElement) {
     if (!param) {
       return value;
     }
+    /* global URLSearchParams */
     const obj = new URLSearchParams(value);
     value = obj.get(param);
     if (!value && value !== '') {
@@ -513,7 +506,26 @@ export class RequestDataExtractor extends HeadersParserMixin(PolymerElement) {
       }
     }
   }
-
+  /**
+   * Returns a value for the payload field.
+   *
+   * @param {Request|Response} source An object to read the url value from.
+   * @param {?Array<String>} path Path to the object
+   * @param {Object} iterator Iterator model. Used only with response body.
+   * @return {String} Value for the path.
+   */
+  _getDataPayload(source, path, iterator) {
+    const ct = this.getContentType(source.headers);
+    if (!ct) {
+      return;
+    }
+    if (path[0] === 'request') {
+      source = this.request.payload;
+    } else {
+      source = this.response.payload;
+    }
+    return this._getPayloadValue(source, ct, path.slice(2), iterator);
+  }
   /**
    * Gets a value from a text for current path. Path is part of the
    * configuration object passed to the constructor.

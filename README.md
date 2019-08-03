@@ -6,7 +6,7 @@
 
 # request-hooks-logic
 
-Package containing a logic for creating HTTP request / response hooks.
+Package containing a logic for creating HTTP request / response hooks for Advanced REST Client.
 
 The documentation for request actions (including data model) can be found in [ARC electron wiki page](https://github.com/advanced-rest-client/arc-electron/wiki/Request-actions).
 
@@ -14,38 +14,39 @@ The documentation for request actions (including data model) can be found in [AR
 
 ```html
 <request-hooks-logic></request-hooks-logic>
-```
+<script>
+{
+  const actions = [{
+    source: 'response.value',
+    action: 'assign-variable',
+    destination: 'itemId',
+    hasIterator: true,
+    iterator: {
+      source: 'json.*.id',
+      operator: 'equal',
+      condition: 'id2'
+    },
+    conditions: [{
+      enabled: true,
+      source: 'response.status',
+      operator: 'equal',
+      condition: '200'
+    }]
+  }];
+  const request = {};
+  const response = {
+    url: '...',
+    headers: 'content-type: application/json',
+    payload: '{"json": [{"id": "id1", "value": "v1"}, {"id": "id2", "value": "v2"}]}'
+  };
 
-```javascript
-const action = {
-  source: 'response.value',
-  action: 'assign-variable',
-  destination: 'itemId',
-  hasIterator: true,
-  iterator: {
-    source: 'json.*.id',
-    operator: 'equal',
-    condition: 'id2'
-  },
-  conditions: [{
-    enabled: true,
-    source: 'response.status',
-    operator: 'equal',
-    condition: '200'
-  }]
-};
-const request = {};
-const response = {
-  url: '...',
-  headers: 'content-type: application/json',
-  payload: '{"json": [{"id": "id1", "value": "v1"}, {"id": "id2", "value": "v2"}]}'
-};
-
-const logic = document.querySelector('request-hooks-logic');
-logic.processActions([action], request, response)
-.then(() => {
-  // done.
-});
+  const logic = document.querySelector('request-hooks-logic');
+  logic.processActions(actions, request, response)
+  .then(() => {
+    // done, variables are set, if any
+  });
+}
+</script>
 ```
 
 When this action is executed it informs `variables-manager` to set in-memory variable called `itemId` and it's value to be set to `v2`. The logic runner iterates over the response in a path defined as `json.*.id`. When the right object is found by the iterator then the value is set from `source` property.
@@ -53,65 +54,6 @@ When this action is executed it informs `variables-manager` to set in-memory var
 ## API components
 
 This components is a part of [API components ecosystem](https://elements.advancedrestclient.com/)
-
-## Usage
-
-### Installation
-```
-npm install --save @advanced-rest-client/request-hooks-logic
-```
-
-### In an html file
-
-```html
-<html>
-  <head>
-    <script type="module">
-      import './node_modules/@advanced-rest-client/request-hooks-logic/request-hooks-logic.js';
-    </script>
-  </head>
-  <body>
-    <request-hooks-logic></request-hooks-logic>
-  </body>
-</html>
-```
-
-### In a Polymer 3 element
-
-```js
-import {PolymerElement, html} from './node_modules/@polymer/polymer/polymer-element.js';
-import './node_modules/@advanced-rest-client/request-hooks-logic/request-hooks-logic.js';
-
-class SampleElement extends PolymerElement {
-  static get template() {
-    return html`
-    <request-hooks-logic></request-hooks-logic>
-    `;
-  }
-}
-customElements.define('sample-element', SampleElement);
-```
-
-### Installation
-
-```sh
-git clone https://github.com/advanced-rest-client/request-hooks-logic
-cd api-url-editor
-npm install
-npm install -g polymer-cli
-```
-
-### Running the demo locally
-
-```sh
-polymer serve --npm
-open http://127.0.0.1:<port>/demo/
-```
-
-### Running the tests
-```sh
-polymer test --npm
-```
 
 ## Jexl dependency
 
@@ -134,7 +76,50 @@ eval.jexl = myJexlVariable;
 Setting path to Jexl:
 
 ```html
-<request-hooks-logic jexl-path="ArcVariables.JexlDev"></request-hooks-logic>
+<request-hooks-logic jexlpath="ArcVariables.JexlDev"></request-hooks-logic>
 ```
 
 This expects the Jexl library to be under `window.ArcVariables.JexlDev` variable.
+
+## Usage
+
+### Installation
+```
+npm install --save @advanced-rest-client/request-hooks-logic
+```
+
+### In a LitElement template
+
+```javascript
+import { LitElement, html } from 'lit-element';
+import '@advanced-rest-client/request-hooks-logic/request-hooks-logic.js';
+
+class SampleElement extends LitElement {
+  render() {
+    return html`
+    <request-hooks-logic jexl="${this.jexlRef}"></request-hooks-logic>
+    `;
+  }
+
+  async processResponse(request, response) {
+    const node = this.shadowRoot.querySelector('request-hooks-logic');
+    const actions = await getActions();
+    await logic.processActions(actions, request, response);
+  }
+}
+customElements.define('sample-element', SampleElement);
+```
+
+### Development
+
+```sh
+git clone https://github.com/advanced-rest-client/request-hooks-logic
+cd request-hooks-logic
+npm install
+```
+
+### Running the tests
+
+```sh
+npm test
+```

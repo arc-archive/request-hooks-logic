@@ -12,6 +12,8 @@
 // tslint:disable:variable-name Describing an API that's defined elsewhere.
 // tslint:disable:no-any describes the API as best we are able today
 
+import {LitElement, html, css} from 'lit-element';
+
 export {RequestHooksLogic};
 
 declare namespace LogicElements {
@@ -22,7 +24,8 @@ declare namespace LogicElements {
    * Actions are logical operations that the user can define in the request panel
    * which the result is assigned to a variable.
    */
-  class RequestHooksLogic extends PolymerElement {
+  class RequestHooksLogic extends LitElement {
+    readonly _evalElement: any;
 
     /**
      * A reference name to the Jexl object.
@@ -38,8 +41,11 @@ declare namespace LogicElements {
      * This property is set automatically when `jexlPath` is processed.
      */
     jexl: object|null|undefined;
+    constructor();
     connectedCallback(): void;
     disconnectedCallback(): void;
+    firstUpdated(): void;
+    render(): any;
 
     /**
      * A handler for the `run-response-actions` custom event.

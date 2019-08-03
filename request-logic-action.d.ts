@@ -12,6 +12,8 @@
 // tslint:disable:variable-name Describing an API that's defined elsewhere.
 // tslint:disable:no-any describes the API as best we are able today
 
+import {LitElement} from 'lit-element';
+
 export {RequestLogicAction};
 
 declare namespace LogicElements {
@@ -19,8 +21,7 @@ declare namespace LogicElements {
   /**
    * An element that runs request / response action.
    */
-  class RequestLogicAction extends PolymerElement {
-    readonly extractor: object|null;
+  class RequestLogicAction extends LitElement {
 
     /**
      * Action's source value
@@ -28,9 +29,16 @@ declare namespace LogicElements {
     source: string|null|undefined;
 
     /**
+     * List of conditions to use. See RequestLogicCondition class for
+     * description.
+     */
+    conditions: Array<object|null>|null;
+    readonly extractor: Element|null;
+
+    /**
      * Source as a path.
      */
-    readonly _sourcePath: Array<String|null>|null;
+    _sourcePath: Array<String|null>|null;
 
     /**
      * An action to perform.
@@ -47,15 +55,9 @@ declare namespace LogicElements {
     destination: string|null|undefined;
 
     /**
-     * List of conditions to use. See RequestLogicCondition class for
-     * description.
-     */
-    conditions: Array<object|null>|null;
-
-    /**
      * Computed list of condition instances
      */
-    readonly _conditions: any[]|null|undefined;
+    _conditionsList: any[]|null|undefined;
 
     /**
      * Iterator object.
@@ -63,6 +65,7 @@ declare namespace LogicElements {
      */
     iterator: object|null|undefined;
     iteratorEnabled: boolean|null|undefined;
+    constructor();
     _computeSourcePath(source: any): any;
 
     /**
