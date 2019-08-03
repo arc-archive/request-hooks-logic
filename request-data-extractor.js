@@ -1,4 +1,4 @@
-<!--
+/**
 @license
 Copyright 2018 The Advanced REST client authors <arc@mulesoft.com>
 Licensed under the Apache License, Version 2.0 (the "License"); you may not
@@ -10,16 +10,14 @@ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
 WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 License for the specific language governing permissions and limitations under
 the License.
--->
-<link rel="import" href="../polymer/polymer-element.html">
-<link rel="import" href="../headers-parser-behavior/headers-parser-behavior.html">
-<link rel="import" href="request-logic-condition.html">
-
-<script>
+*/
+import { LitElement } from 'lit-element';
+import { HeadersParserMixin } from '@advanced-rest-client/headers-parser-mixin/headers-parser-mixin.js';
+import './request-logic-condition.js';
 /**
  * Class responsible for extracting data from JSON values.
  */
-class ActionIterableObject {
+export class ActionIterableObject {
   /**
    * @constructor
    * @param {Object} opts Iterator options
@@ -78,7 +76,7 @@ class ActionIterableObject {
 /**
  * Class responsible for extracting data from JSON values.
  */
-class JsonExtractor {
+export class JsonExtractor {
   /**
    * @constructor
    * @param {String|Object|Array} json JSON string or object. Strings are
@@ -130,7 +128,7 @@ class JsonExtractor {
    */
   extract() {
     if (this._iterator.valid) {
-      let obj = this._getValue(this._data, this._iterator.source);
+      const obj = this._getValue(this._data, this._iterator.source);
       if (!obj) {
         return;
       }
@@ -254,7 +252,7 @@ class JsonExtractor {
 /**
  * A helper class to extract data from an XML response.
  */
-class XmlExtractor {
+export class XmlExtractor {
   /**
    * @constructor
    * @param {String} xml XML string.
@@ -359,35 +357,36 @@ class XmlExtractor {
  * @polymer
  * @customElement
  * @memberof LogicElements
- * @appliesMixin ArcBehaviors.HeadersParserBehavior
+ * @appliesMixin HeadersParserMixin
  */
-class RequestDataExtractor extends ArcBehaviors.HeadersParserBehavior(Polymer.Element) {
-  static get is() { return 'request-data-extractor'; }
+export class RequestDataExtractor extends HeadersParserMixin(LitElement) {
   static get properties() {
     return {
       /**
        * ARC request object
        */
-      request: Object,
+      request: { type: Object },
       /**
        * ARC response object
        */
-      response: Object,
+      response: { type: Object },
       /**
        * Source path delimiter
        */
-      pathDelimiter: {
-        type: String,
-        value: '.'
-      },
+      pathDelimiter: { type: String },
       /**
        * Source data path. Either array of path segments
        * or full path as string.
        *
        * @type {Array<String>|String}
        */
-      path: String
+      path: { type: String }
     };
+  }
+
+  constructor() {
+    super();
+    this.pathDelimiter = '.';
   }
 
   /**
@@ -412,17 +411,7 @@ class RequestDataExtractor extends ArcBehaviors.HeadersParserBehavior(Polymer.El
       case 'url': return this._getDataUrl(source.url, path.slice(2));
       case 'headers': return this._getDataHeaders(source, path.slice(2));
       case 'status': return source.status;
-      case 'body':
-        const ct = this.getContentType(source.headers);
-        if (!ct) {
-          return;
-        }
-        if (path[0] === 'request') {
-          source = this.request.payload;
-        } else {
-          source = this.response.payload;
-        }
-        return this._getPayloadValue(source, ct, path.slice(2), iterator);
+      case 'body': return this._getDataPayload(source, path, iterator);
       default: throw new Error('Unknown path for source ' + path[0]);
     }
   }
@@ -490,6 +479,7 @@ class RequestDataExtractor extends ArcBehaviors.HeadersParserBehavior(Polymer.El
     if (!param) {
       return value;
     }
+    /* global URLSearchParams */
     const obj = new URLSearchParams(value);
     value = obj.get(param);
     if (!value && value !== '') {
@@ -516,7 +506,26 @@ class RequestDataExtractor extends ArcBehaviors.HeadersParserBehavior(Polymer.El
       }
     }
   }
-
+  /**
+   * Returns a value for the payload field.
+   *
+   * @param {Request|Response} source An object to read the url value from.
+   * @param {?Array<String>} path Path to the object
+   * @param {Object} iterator Iterator model. Used only with response body.
+   * @return {String} Value for the path.
+   */
+  _getDataPayload(source, path, iterator) {
+    const ct = this.getContentType(source.headers);
+    if (!ct) {
+      return;
+    }
+    if (path[0] === 'request') {
+      source = this.request.payload;
+    } else {
+      source = this.response.payload;
+    }
+    return this._getPayloadValue(source, ct, path.slice(2), iterator);
+  }
   /**
    * Gets a value from a text for current path. Path is part of the
    * configuration object passed to the constructor.
@@ -544,5 +553,4 @@ class RequestDataExtractor extends ArcBehaviors.HeadersParserBehavior(Polymer.El
     }
   }
 }
-window.customElements.define(RequestDataExtractor.is, RequestDataExtractor);
-</script>
+window.customElements.define('request-data-extractor', RequestDataExtractor);

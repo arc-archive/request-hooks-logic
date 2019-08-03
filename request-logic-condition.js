@@ -1,4 +1,4 @@
-<!--
+/**
 @license
 Copyright 2018 The Advanced REST client authors <arc@mulesoft.com>
 Licensed under the Apache License, Version 2.0 (the "License"); you may not
@@ -10,11 +10,9 @@ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
 WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 License for the specific language governing permissions and limitations under
 the License.
--->
-<link rel="import" href="../polymer/polymer-element.html">
-<link rel="import" href="request-data-extractor.html">
-
-<script>
+*/
+import { LitElement } from 'lit-element';
+import './request-data-extractor.js';
 /**
  * An element that performs a logic condition check defined in request / response
  * actions for ARC.
@@ -23,41 +21,39 @@ the License.
  * @customElement
  * @memberof LogicElements
  */
-class RequestLogicCondition extends Polymer.Element {
-  static get is() { return 'request-logic-condition'; }
+export class RequestLogicCondition extends LitElement {
   static get properties() {
     return {
       /**
        * A flag to determine if the condition is enabled.
        * When set the `satisfied()` function always returns `false`.
        */
-      enabled: Boolean,
+      enabled: { type: Boolean },
       /**
        * Condition data source
        */
-      source: String,
+      source: { type: String },
       /**
        * The comparator name
        */
-      operator: String,
+      operator: { type: String },
       /**
        * A value to test against the source value.
        */
-      condition: String
+      condition: { type: String }
     };
   }
   /**
-   * @return {Object} A reference to `request-data-extractor` component
+   * @return {Element} A reference to `request-data-extractor` component
    */
   get extractor() {
-    if (!this.$) {
-      this.$ = {};
-    }
     const k = 'request-data-extractor';
-    if (!this.$[k]) {
-      this.$[k] = document.createElement(k);
+    let node = this.shadowRoot.querySelector(k);
+    if (!node) {
+      node = document.createElement(k);
+      this.shadowRoot.appendChild(node);
     }
-    return this.$[k];
+    return node;
   }
   /**
    * Checks if the condition has been satified for current request and response
@@ -230,13 +226,12 @@ class RequestLogicCondition extends Polymer.Element {
   isRegex(value, condition) {
     let re;
     try {
-      re = new RegExp(condition);
+      re = new RegExp(condition, 'm');
     } catch (e) {
       return false;
     }
     value = String(value);
-    return value.test(re);
+    return re.test(value);
   }
 }
-window.customElements.define(RequestLogicCondition.is, RequestLogicCondition);
-</script>
+window.customElements.define('request-logic-condition', RequestLogicCondition);

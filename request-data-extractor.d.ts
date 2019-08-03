@@ -5,16 +5,18 @@
  *   https://github.com/Polymer/tools/tree/master/packages/gen-typescript-declarations
  *
  * To modify these typings, edit the source file(s):
- *   request-data-extractor.html
+ *   request-data-extractor.js
  */
 
 
 // tslint:disable:variable-name Describing an API that's defined elsewhere.
 // tslint:disable:no-any describes the API as best we are able today
 
-/// <reference path="../polymer/types/polymer-element.d.ts" />
-/// <reference path="../headers-parser-behavior/headers-parser-behavior.d.ts" />
-/// <reference path="request-logic-condition.d.ts" />
+import {LitElement} from 'lit-element';
+
+import {HeadersParserMixin} from '@advanced-rest-client/headers-parser-mixin/headers-parser-mixin.js';
+
+export {ActionIterableObject};
 
 /**
  * Class responsible for extracting data from JSON values.
@@ -49,6 +51,8 @@ declare class ActionIterableObject {
    */
   _validate(opts: object|null): Boolean|null;
 }
+
+export {JsonExtractor};
 
 /**
  * Class responsible for extracting data from JSON values.
@@ -124,6 +128,8 @@ declare class JsonExtractor {
   _getIterableValueObject(json: object|any[]|null, path: Array<String|null>|null, opts: ActionIterableObject|null): object|null|undefined;
 }
 
+export {XmlExtractor};
+
 /**
  * A helper class to extract data from an XML response.
  */
@@ -163,6 +169,8 @@ declare class XmlExtractor {
   _valueForAttr(dom: Element|null, part: Number|null): String|null|undefined;
 }
 
+export {RequestDataExtractor};
+
 declare namespace LogicElements {
 
   /**
@@ -185,7 +193,7 @@ declare namespace LogicElements {
    * are planning to use this component in older browsers.
    */
   class RequestDataExtractor extends
-    ArcBehaviors.HeadersParserBehavior(
+    HeadersParserMixin(
     Object) {
 
     /**
@@ -264,6 +272,16 @@ declare namespace LogicElements {
     _getDataHeaders(source: Request|Response|null, path: Array<String|null>|null): Headers|String|null;
 
     /**
+     * Returns a value for the payload field.
+     *
+     * @param source An object to read the url value from.
+     * @param path Path to the object
+     * @param iterator Iterator model. Used only with response body.
+     * @returns Value for the path.
+     */
+    _getDataPayload(source: Request|Response|null, path: Array<String|null>|null, iterator: object|null): String|null;
+
+    /**
      * Gets a value from a text for current path. Path is part of the
      * configuration object passed to the constructor.
      *
@@ -277,6 +295,9 @@ declare namespace LogicElements {
   }
 }
 
-interface HTMLElementTagNameMap {
-  "request-data-extractor": LogicElements.RequestDataExtractor;
+declare global {
+
+  interface HTMLElementTagNameMap {
+    "request-data-extractor": LogicElements.RequestDataExtractor;
+  }
 }

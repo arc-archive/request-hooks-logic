@@ -1,33 +1,87 @@
 {
   "name": "@advanced-rest-client/request-hooks-logic",
   "description": "Package containing a logic for creating HTTP request / response hooks",
-  "version": "2.0.0",
-  "scripts": {
-    "test": "polymer test --plugin local",
-    "lint": "polymer lint request-hooks-logic.html",
-    "test-sauce": "polymer test --plugin sauce --job-name \"request-hooks-logic:local-test\"",
-    "update-types": "gen-typescript-declarations --deleteExisting --outDir ."
-  },
-  "public": true,
-  "repository": {
-    "type": "git",
-    "url": "git+ssh://git@github.com/advanced-rest-client/request-hooks-logic.git"
-  },
+  "license": "Apache-2.0",
+  "version": "3.0.0",
+  "main": "request-hooks-logic.js",
   "keywords": [
     "api-console",
     "builder",
     "node"
   ],
-  "license": "Apache-2.0",
-  "bugs": {
-    "url": "https://github.com/advanced-rest-client/request-hooks-logic/issues"
-  },
-  "homepage": "https://github.com/advanced-rest-client/request-hooks-logic#readme",
-  "devDependencies": {
-    "@polymer/gen-typescript-declarations": "^1.6.0"
-  },
   "authors": [
     "Pawel Psztyc",
     "The Advanced REST client authors <arc@mulesoft.com>"
-  ]
+  ],
+  "contributors": [
+    "Pawel Psztyc",
+    "The Advanced REST client authors <arc@mulesoft.com>"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/advanced-rest-client/request-hooks-logic.git"
+  },
+  "bugs": {
+    "url": "https://github.com/advanced-rest-client/request-hooks-logic/issues",
+    "email": "arc@mulesoft.com"
+  },
+  "dependencies": {
+    "@advanced-rest-client/headers-parser-mixin": "^3.0.0",
+    "@advanced-rest-client/variables-evaluator": "^3.0.0",
+    "lit-element": "^2.2.1"
+  },
+  "devDependencies": {
+    "@advanced-rest-client/arc-demo-helper": "^1.0.9",
+    "@advanced-rest-client/eslint-config": "^1.0.6",
+    "@advanced-rest-client/prettier-config": "^0.1.0",
+    "@advanced-rest-client/testing-karma-sl": "^1.0.3",
+    "@advanced-rest-client/variables-manager": "^3.0.0",
+    "@babel/core": "^7.5.5",
+    "@babel/preset-env": "^7.5.5",
+    "@commitlint/cli": "^8.1.0",
+    "@commitlint/config-conventional": "^7.0.0",
+    "@open-wc/testing": "^2.2.1",
+    "@open-wc/testing-karma": "^3.1.5",
+    "@pika/web": "^0.4.4",
+    "@polymer/gen-typescript-declarations": "^1.6.2",
+    "babel-plugin-minify-mangle-names": "^0.5.0",
+    "browserify": "^16.3.0",
+    "fs-extra": "^7.0.1",
+    "jexl": "^2.1.1",
+    "uglify-js": "^3.6.0",
+    "sinon": "^7.3.2",
+    "deepmerge": "^4.0.0",
+    "es-dev-server": "^1.8.3",
+    "husky": "^1.0.0",
+    "karma": "^4.2.0",
+    "lint-staged": "^9.2.1"
+  },
+  "scripts": {
+    "test": "karma start --coverage",
+    "update-types": "gen-typescript-declarations --deleteExisting --outDir .",
+    "start": "es-dev-server --app-index demo/index.html --node-resolve --open --watch",
+    "start:compatibility": "es-dev-server --app-index demo/index.html --compatibility all --node-resolve --open --watch",
+    "lint:eslint": "eslint --ext .js,.html .",
+    "format:eslint": "eslint --ext .js,.html . --fix",
+    "lint:prettier": "prettier \"**/*.js\" --list-different || (echo '↑↑ these files are not prettier formatted ↑↑' && exit 1)",
+    "format:prettier": "prettier \"**/*.js\" --write",
+    "lint": "npm run lint:eslint && npm run lint:prettier",
+    "format": "npm run format:eslint && npm run format:prettier",
+    "test:watch": "karma start --auto-watch=true --single-run=false",
+    "test:legacy": "karma start --legacy --coverage",
+    "test:legacy:watch": "karma start --legacy --auto-watch=true --single-run=false",
+    "test:sl": "karma start karma.sl.config.js --legacy --coverage",
+    "prepare": "pika-web && node dev-lib/prepare.js"
+  },
+  "lint-staged": {
+    "*.js": [
+      "eslint --fix",
+      "git add"
+    ]
+  },
+  "@pika/web": {
+    "webDependencies": [
+      "jexl/lib/Jexl.js"
+    ]
+  }
 }

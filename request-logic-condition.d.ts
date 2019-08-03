@@ -5,15 +5,16 @@
  *   https://github.com/Polymer/tools/tree/master/packages/gen-typescript-declarations
  *
  * To modify these typings, edit the source file(s):
- *   request-logic-condition.html
+ *   request-logic-condition.js
  */
 
 
 // tslint:disable:variable-name Describing an API that's defined elsewhere.
 // tslint:disable:no-any describes the API as best we are able today
 
-/// <reference path="../polymer/types/polymer-element.d.ts" />
-/// <reference path="request-data-extractor.d.ts" />
+import {LitElement} from 'lit-element';
+
+export {RequestLogicCondition};
 
 declare namespace LogicElements {
 
@@ -21,8 +22,8 @@ declare namespace LogicElements {
    * An element that performs a logic condition check defined in request / response
    * actions for ARC.
    */
-  class RequestLogicCondition extends Polymer.Element {
-    readonly extractor: object|null;
+  class RequestLogicCondition extends LitElement {
+    readonly extractor: Element|null;
 
     /**
      * A flag to determine if the condition is enabled.
@@ -44,6 +45,7 @@ declare namespace LogicElements {
      * A value to test against the source value.
      */
     condition: string|null|undefined;
+    constructor();
 
     /**
      * Checks if the condition has been satified for current request and response
@@ -143,6 +145,9 @@ declare namespace LogicElements {
   }
 }
 
-interface HTMLElementTagNameMap {
-  "request-logic-condition": LogicElements.RequestLogicCondition;
+declare global {
+
+  interface HTMLElementTagNameMap {
+    "request-logic-condition": LogicElements.RequestLogicCondition;
+  }
 }

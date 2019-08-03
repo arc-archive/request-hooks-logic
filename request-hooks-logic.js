@@ -1,4 +1,4 @@
-<!--
+/**
 @license
 Copyright 2018 The Advanced REST client authors <arc@mulesoft.com>
 Licensed under the Apache License, Version 2.0 (the "License"); you may not
@@ -10,11 +10,10 @@ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
 WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 License for the specific language governing permissions and limitations under
 the License.
--->
-<link rel="import" href="../polymer/polymer-element.html">
-<link rel="import" href="../variables-evaluator/variables-evaluator.html">
-<link rel="import" href="request-logic-action.html">
-<script>
+*/
+import { LitElement, html, css } from 'lit-element';
+import '@advanced-rest-client/variables-evaluator/variables-evaluator.js';
+import './request-logic-action.js';
 /**
  * A component responsible for logic for ARC's request and responses actions.
  *
@@ -25,38 +24,64 @@ the License.
  * @customElement
  * @memberof LogicElements
  */
-class RequestHooksLogic extends Polymer.Element {
-  static get is() {
-    return 'request-hooks-logic';
+export class RequestHooksLogic extends LitElement {
+  static get styles() {
+    return css`:host {
+      display: none !important;
+    }`;
   }
 
-  get evalElement() {
-    if (!this.$) {
-      this.$ = {};
-    }
-    if (!this.$.eval) {
-      this.$.eval = document.createElement('variables-evaluator');
-      this.$.eval.noBeforeRequest = true;
-      this.$.eval.eventTarget = this;
-      this.shadowRoot.appendChild(this.$.eval);
-    }
-    return this.$.eval;
+  render() {
+    const { jexlPath, jexl } = this;
+    return html`
+    <variables-evaluator .jexlPath="${jexlPath}" .jexl="${jexl}" nobeforerequest></variables-evaluator>`;
+  }
+
+  static get properties() {
+    return {
+      /**
+       * A reference name to the Jexl object.
+       * Use dot notation to access it from the `window` object.
+       * To set class pointer use `jexl` property.
+       */
+      jexlPath: { type: String },
+      /**
+       * A Jexl class reference.
+       * If this value is set it must be a pointer to the Jexl class and
+       * `jexlPath` is ignored.
+       * This property is set automatically when `jexlPath` is processed.
+       */
+      jexl: { type: Object }
+    };
+  }
+
+  get _evalElement() {
+    return this.shadowRoot.querySelector('variables-evaluator');
   }
 
   constructor() {
     super();
     this._handler = this._handler.bind(this);
-    this._shadowRoot = this.attachShadow({mode: 'open'});
   }
 
   connectedCallback() {
-    super.connectedCallback();
+    /* istanbul ignore else */
+    if (super.connectedCallback) {
+      super.connectedCallback();
+    }
     window.addEventListener('run-response-actions', this._handler);
   }
 
   disconnectedCallback() {
-    super.disconnectedCallback();
+    /* istanbul ignore else */
+    if (super.disconnectedCallback) {
+      super.disconnectedCallback();
+    }
     window.removeEventListener('run-response-actions', this._handler);
+  }
+
+  firstUpdated() {
+    this._evalElement.eventTarget = this;
   }
   /**
    * A handler for the `run-response-actions` custom event.
@@ -81,32 +106,29 @@ class RequestHooksLogic extends Polymer.Element {
    * https://github.com/advanced-rest-client/api-components-api/blob/master/docs/api-request-and-response.md#api-request
    * @return {Promise} A promise resolved when actions were performed.
    */
-  processActions(actions, request, response) {
+  async processActions(actions, request, response) {
     if (!actions || !request || !response) {
-      return Promise.reject(new Error('Expecting 3 arguments.'));
+      throw new Error('Expecting 3 arguments.');
     }
-    const p = [];
-    actions.forEach((action) => {
+    for (let i = 0, len = actions.length; i < len; i++) {
+      const action = actions[i];
       if (action.enabled === false) {
-        return;
+        continue;
       }
-      p.push(this._evaluateAction(action));
-    });
-    return Promise.all(p)
-    .then((actions) => this._runRecursive(actions, request, response));
+      actions[i] = await this._evaluateAction(action);
+    }
+    return await this._runRecursive(actions, request, response);
   }
 
-  _evaluateAction(action) {
+  async _evaluateAction(action) {
     const copy = this._copyAction(action);
     const mainProps = ['destination', 'source'];
     const iteratorProps = ['condition', 'source'];
-    return this.evalElement.evaluateVariables(copy, mainProps)
-    .then(() => {
-      if (copy.iterator) {
-        return this.evalElement.evaluateVariables(copy.iterator, iteratorProps);
-      }
-    })
-    .then(() => copy);
+    await this._evalElement.evaluateVariables(copy, mainProps);
+    if (copy.iterator) {
+      await this._evalElement.evaluateVariables(copy.iterator, iteratorProps);
+    }
+    return copy;
   }
 
   /**
@@ -151,17 +173,19 @@ class RequestHooksLogic extends Polymer.Element {
    * @param {Object} response ARC response object
    * @return {Promise}
    */
-  _runRecursive(actions, request, response) {
+  async _runRecursive(actions, request, response) {
     if (!actions || !actions.length) {
-      return Promise.resolve(response);
+      return response;
     }
     const action = this._createLogicElement(actions.shift());
-    return action.run(request, response)
-    .then(() => {
+    try {
+      await action.run(request, response);
       this.shadowRoot.removeChild(action);
-      return this._runRecursive(actions, request, response);
-    });
+    } catch (cause) {
+      this.shadowRoot.removeChild(action);
+      throw cause;
+    }
+    return await this._runRecursive(actions, request, response);
   }
 }
-window.customElements.define(RequestHooksLogic.is, RequestHooksLogic);
-</script>
+window.customElements.define('request-hooks-logic', RequestHooksLogic);
